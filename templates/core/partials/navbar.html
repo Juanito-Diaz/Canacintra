@@ -1,0 +1,76 @@
+{% load static %}
+<!-- ════════════════════════════════════════════
+     Navbar CANACINTRA — partial: navbar.html
+════════════════════════════════════════════ -->
+<nav class="navbar navbar-expand-lg navbar-dark canacintra-navbar sticky-top" id="navbar-principal">
+  <div class="container">
+    <!-- Logo / Marca -->
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'core:index' %}">
+      <div class="brand-icon">
+        <i class="bi bi-newspaper"></i>
+      </div>
+      <div>
+        <span class="brand-name">CANACINTRA</span>
+        <small class="brand-sub d-block">Portal de Noticias</small>
+      </div>
+    </a>
+
+    <button class="navbar-toggler border-0" type="button"
+            data-bs-toggle="collapse" data-bs-target="#navbarMenu"
+            aria-controls="navbarMenu" aria-expanded="false" aria-label="Menú">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarMenu">
+      <!-- Navegación por categorías -->
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link {% if request.path == '/' %}active{% endif %}"
+             href="{% url 'core:index' %}">
+            <i class="bi bi-house-door me-1"></i>Inicio
+          </a>
+        </li>
+        {% for cat in categorias %}
+        <li class="nav-item">
+          <a class="nav-link {% if request.path == cat.get_absolute_url %}active{% endif %}"
+             href="{{ cat.get_absolute_url }}">
+            {{ cat.nombre }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <!-- Buscador con autocompletado AJAX -->
+      <div class="search-wrapper position-relative me-2">
+        <form class="d-flex" action="{% url 'core:buscar' %}" method="GET" role="search" id="form-busqueda">
+          <div class="input-group">
+            <input
+              class="form-control search-input"
+              type="search"
+              name="q"
+              id="input-busqueda"
+              placeholder="Buscar noticias…"
+              autocomplete="off"
+              aria-label="Buscar noticias"
+              value="{{ request.GET.q|default:'' }}"
+            />
+            <button class="btn btn-accent" type="submit" aria-label="Buscar">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </form>
+        <!-- Dropdown de sugerencias AJAX -->
+        <div id="sugerencias-busqueda" class="suggestions-dropdown d-none"></div>
+      </div>
+
+      <!-- Admin link -->
+      {% if user.is_staff %}
+      <a href="/admin/" class="btn btn-outline-light btn-sm ms-1">
+        <i class="bi bi-shield-lock me-1"></i>Admin
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+

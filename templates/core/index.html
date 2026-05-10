@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Noticias CANACINTRA{% endblock %}
+{% block meta_description %}Últimas noticias de la Cámara Nacional de la Industria de Transformación — CANACINTRA.{% endblock %}
+
+{% block content %}
+
+<!-- ════════════════════════════════════
+     HERO: Noticias Destacadas (top 3)
+════════════════════════════════════ -->
+{% if destacadas %}
+<section class="hero-section py-4 py-lg-5">
+  <div class="container">
+    <div class="row g-4">
+      <!-- Noticia principal -->
+      {% with principal=destacadas.0 %}
+      <div class="col-lg-7">
+        <article class="card-hero position-relative overflow-hidden rounded-4 shadow-lg h-100"
+                 style="min-height: 420px;">
+          {% if principal.imagen_destacada %}
+          <img src="{{ principal.imagen_destacada.url }}"
+               alt="{{ principal.titulo }}"
+               class="hero-img w-100 h-100 object-fit-cover position-absolute top-0 start-0" />
+          {% else %}
+          <div class="hero-placeholder w-100 h-100 position-absolute top-0 start-0"></div>
+          {% endif %}
+          <div class="hero-overlay position-absolute bottom-0 start-0 end-0 p-4">
+            <span class="badge-categoria mb-2 d-inline-block">
+              <i class="bi bi-tag me-1"></i>{{ principal.categoria.nombre }}
+            </span>
+            <h1 class="hero-title">
+              <a href="{{ principal.get_absolute_url }}" class="text-white stretched-link text-decoration-none">
+                {{ principal.titulo }}
+              </a>
+            </h1>
+            <p class="hero-excerpt text-white-75 d-none d-md-block">
+              {{ principal.resumen|truncatewords:20 }}
+            </p>
+            <div class="d-flex align-items-center gap-3 mt-2">
+              <small class="text-white-50">
+                <i class="bi bi-person-circle me-1"></i>
+                {{ principal.autor.get_full_name|default:principal.autor.username|default:"Redacción" }}
+              </small>
+              <small class="text-white-50">
+                <i class="bi bi-calendar3 me-1"></i>
+                {% if principal.fecha_publicacion %}
+                  {{ principal.fecha_publicacion|date:"d M Y" }}
+                {% else %}
+                  {{ principal.fecha_creacion|date:"d M Y" }}
+                {% endif %}
+              </small>
+              <small class="text-white-50">
+                <i class="bi bi-eye me-1"></i>{{ principal.vistas }}
+              </small>
+            </div>
+          </div>
+        </article>
+      </div>
+      {% endwith %}
+
+      <!-- Noticias secundarias (2 y 3) -->
+      <div class="col-lg-5">
+        <div class="d-flex flex-column gap-4 h-100">
+          {% for noticia in destacadas|slice:"1:3" %}
+          <article class="card-secondary position-relative overflow-hidden rounded-4 shadow flex-fill"
+                   style="min-height: 185px;">
+            {% if noticia.imagen_destacada %}
+            <img src="{{ noticia.imagen_destacada.url }}"
+                 alt="{{ noticia.titulo }}"
+                 class="hero-img w-100 h-100 object-fit-cover position-absolute top-0 start-0" />
+            {% else %}
+            <div class="hero-placeholder w-100 h-100 position-absolute top-0 start-0"
+                 style="background: linear-gradient(135deg, #1a3a6e 0%, #2e5fa3 100%);"></div>
+            {% endif %}
+            <div class="hero-overlay position-absolute bottom-0 start-0 end-0 p-3">
+              <span class="badge-categoria mb-1 d-inline-block" style="font-size:.72rem;">
+                {{ noticia.categoria.nombre }}
+              </span>
+              <h2 class="secondary-title">
+                <a href="{{ noticia.get_absolute_url }}" class="text-white stretched-link text-decoration-none">
+                  {{ noticia.titulo|truncatewords:12 }}
+                </a>
+              </h2>
+              <small class="text-white-50">
+                <i class="bi bi-calendar3 me-1"></i>
+                {% if noticia.fecha_publicacion %}
+                  {{ noticia.fecha_publicacion|date:"d M Y" }}
+                {% else %}
+                  {{ noticia.fecha_creacion|date:"d M Y" }}
+                {% endif %}
+              </small>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ════════════════════════════════════
+     GRID: Más Noticias
+════════════════════════════════════ -->
+<section class="noticias-section py-5">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h2 class="section-title mb-0">
+        <i class="bi bi-collection me-2 text-primary"></i>Más Noticias
+      </h2>
+      <small class="text-muted">{{ noticias.paginator.count }} nota(s)</small>
+    </div>
+
+    {% if noticias %}
+    <div class="row g-4">
+      {% for noticia in noticias %}
+      <div class="col-sm-6 col-lg-4">
+        <article class="news-card h-100 rounded-4 overflow-hidden shadow-sm d-flex flex-column">
+          <!-- Imagen -->
+          <div class="news-card-img-wrapper">
+            {% if noticia.imagen_destacada %}
+            <img src="{{ noticia.imagen_destacada.url }}"
+                 alt="{{ noticia.titulo }}"
+                 class="news-card-img" />
+            {% else %}
+            <div class="news-card-img-placeholder d-flex align-items-center justify-content-center">
+              <i class="bi bi-newspaper fs-1 text-white-50"></i>
+            </div>
+            {% endif %}
+            <a href="{{ noticia.categoria.get_absolute_url }}"
+               class="news-cat-badge">{{ noticia.categoria.nombre }}</a>
+          </div>
+          <!-- Contenido -->
+          <div class="news-card-body flex-grow-1 d-flex flex-column p-4">
+            <h3 class="news-card-title">
+              <a href="{{ noticia.get_absolute_url }}" class="text-decoration-none">
+                {{ noticia.titulo|truncatewords:12 }}
+              </a>
+            </h3>
+            <p class="news-card-excerpt flex-grow-1">
+              {{ noticia.resumen|default:noticia.contenido|truncatewords:22 }}
+            </p>
+            <div class="news-card-meta d-flex align-items-center justify-content-between mt-3">
+              <div class="d-flex align-items-center gap-2">
+                <div class="author-avatar">
+                  {{ noticia.autor.first_name|first|default:"R" }}
+                </div>
+                <small class="text-muted">
+                  {{ noticia.autor.get_full_name|default:"Redacción" }}
+                </small>
+              </div>
+              <small class="text-muted">
+                <i class="bi bi-eye me-1"></i>{{ noticia.vistas }}
+              </small>
+            </div>
+            <div class="mt-2">
+              <small class="text-muted">
+                <i class="bi bi-calendar3 me-1"></i>
+                {% if noticia.fecha_publicacion %}
+                  {{ noticia.fecha_publicacion|date:"d M Y" }}
+                {% else %}
+                  {{ noticia.fecha_creacion|date:"d M Y" }}
+                {% endif %}
+              </small>
+            </div>
+          </div>
+        </article>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Paginación -->
+    {% if noticias.has_other_pages %}
+    <nav class="d-flex justify-content-center mt-5" aria-label="Paginación de noticias">
+      <ul class="pagination pagination-custom">
+        {% if noticias.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?pagina={{ noticias.previous_page_number }}">
+            <i class="bi bi-chevron-left"></i>
+          </a>
+        </li>
+        {% endif %}
+        {% for num in noticias.paginator.page_range %}
+        <li class="page-item {% if noticias.number == num %}active{% endif %}">
+          <a class="page-link" href="?pagina={{ num }}">{{ num }}</a>
+        </li>
+        {% endfor %}
+        {% if noticias.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?pagina={{ noticias.next_page_number }}">
+            <i class="bi bi-chevron-right"></i>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-newspaper fs-1 text-muted mb-3 d-block"></i>
+      <h4 class="text-muted">No hay noticias publicadas aún.</h4>
+      <p class="text-muted">Las noticias publicadas aparecerán aquí.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

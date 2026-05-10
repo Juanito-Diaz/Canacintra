@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ titulo_pagina }}{% endblock %}
+{% block meta_description %}Resultados de búsqueda para "{{ query }}" en el portal de noticias CANACINTRA.{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <!-- Formulario de búsqueda destacado -->
+  <div class="buscar-hero text-center mb-5">
+    <h1 class="fw-bold mb-3">
+      <i class="bi bi-search me-2 text-primary"></i>Buscador de Noticias
+    </h1>
+    <form class="d-flex justify-content-center" action="{% url 'core:buscar' %}" method="GET" id="form-busqueda-principal">
+      <div class="input-group input-group-lg" style="max-width:600px;">
+        <input
+          type="search"
+          name="q"
+          class="form-control search-input-lg"
+          placeholder="Escribe una palabra clave…"
+          value="{{ query }}"
+          aria-label="Buscar noticias"
+          autofocus
+        />
+        <button class="btn btn-primary btn-lg" type="submit">
+          <i class="bi bi-search me-1"></i>Buscar
+        </button>
+      </div>
+    </form>
+  </div>
+
+  {% if query %}
+  <!-- Encabezado de resultados -->
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h2 class="h5 mb-1">
+        Resultados para: <mark class="px-2 rounded">{{ query }}</mark>
+      </h2>
+      <small class="text-muted">{{ total }} resultado(s) encontrado(s)</small>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      {% for cat in categorias %}
+      <a href="{{ cat.get_absolute_url }}" class="cat-pill" style="font-size:.78rem;">{{ cat.nombre }}</a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Resultados -->
+  {% if noticias %}
+  <div class="row g-4">
+    {% for noticia in noticias %}
+    <div class="col-12">
+      <article class="resultado-card d-flex gap-4 rounded-4 overflow-hidden shadow-sm bg-white p-0">
+        <!-- Imagen -->
+        <div class="resultado-img-wrapper flex-shrink-0" style="width:200px;">
+          {% if noticia.imagen_destacada %}
+          <img src="{{ noticia.imagen_destacada.url }}"
+               alt="{{ noticia.titulo }}"
+               class="w-100 h-100 object-fit-cover" />
+          {% else %}
+          <div class="w-100 h-100 bg-primary-subtle d-flex align-items-center justify-content-center">
+            <i class="bi bi-newspaper fs-2 text-primary-emphasis"></i>
+          </div>
+          {% endif %}
+        </div>
+        <!-- Contenido -->
+        <div class="p-4 d-flex flex-column justify-content-center flex-grow-1">
+          <a href="{{ noticia.categoria.get_absolute_url }}"
+             class="badge-categoria mb-2 d-inline-block">
+            {{ noticia.categoria.nombre }}
+          </a>
+          <h3 class="h6 fw-bold mb-2">
+            <a href="{{ noticia.get_absolute_url }}" class="text-decoration-none text-dark">
+              {{ noticia.titulo }}
+            </a>
+          </h3>
+          <p class="text-muted small mb-2">
+            {{ noticia.resumen|default:noticia.contenido|truncatewords:30 }}
+          </p>
+          <div class="d-flex gap-3 text-muted">
+            <small>
+              <i class="bi bi-person me-1"></i>
+              {{ noticia.autor.get_full_name|default:"Redacción" }}
+            </small>
+            <small>
+              <i class="bi bi-calendar3 me-1"></i>
+              {% if noticia.fecha_publicacion %}
+                {{ noticia.fecha_publicacion|date:"d M Y" }}
+              {% else %}
+                {{ noticia.fecha_creacion|date:"d M Y" }}
+              {% endif %}
+            </small>
+            <small>
+              <i class="bi bi-eye me-1"></i>{{ noticia.vistas }}
+            </small>
+          </div>
+        </div>
+      </article>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Paginación -->
+  {% if noticias.has_other_pages %}
+  <nav class="d-flex justify-content-center mt-5" aria-label="Paginación de resultados">
+    <ul class="pagination pagination-custom">
+      {% if noticias.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?q={{ query }}&pagina={{ noticias.previous_page_number }}">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+      </li>
+      {% endif %}
+      {% for num in noticias.paginator.page_range %}
+      <li class="page-item {% if noticias.number == num %}active{% endif %}">
+        <a class="page-link" href="?q={{ query }}&pagina={{ num }}">{{ num }}</a>
+      </li>
+      {% endfor %}
+      {% if noticias.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?q={{ query }}&pagina={{ noticias.next_page_number }}">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <div class="text-center py-5">
+    <i class="bi bi-emoji-frown fs-1 text-muted mb-3 d-block"></i>
+    <h4 class="text-muted">Sin resultados para "{{ query }}"</h4>
+    <p class="text-muted">Intenta con otras palabras clave.</p>
+    <a href="{% url 'core:index' %}" class="btn btn-primary mt-2">
+      <i class="bi bi-house me-1"></i>Volver al inicio
+    </a>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- Sin query: mostrar categorías -->
+  <div class="text-center py-4">
+    <p class="text-muted mb-4">Explora nuestras secciones:</p>
+    <div class="d-flex flex-wrap justify-content-center gap-3">
+      {% for cat in categorias %}
+      <a href="{{ cat.get_absolute_url }}" class="btn btn-outline-primary">
+        {{ cat.nombre }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

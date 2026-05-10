@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ categoria.nombre }} | CANACINTRA{% endblock %}
+{% block meta_description %}Noticias de {{ categoria.nombre }} en CANACINTRA — {{ categoria.descripcion|truncatewords:20 }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <!-- Encabezado de categoría -->
+  <div class="categoria-header mb-5 p-4 rounded-4 text-center shadow-sm" style="background: linear-gradient(135deg, var(--color-primary), var(--color-primary-mid));">
+    <span class="badge bg-white text-primary mb-2">Categoría</span>
+    <h1 class="text-white fw-bold">{{ categoria.nombre }}</h1>
+    {% if categoria.descripcion %}
+    <p class="text-white-75 mb-0">{{ categoria.descripcion }}</p>
+    {% endif %}
+  </div>
+
+  <!-- Grid de noticias -->
+  {% if noticias %}
+  <div class="row g-4">
+    {% for noticia in noticias %}
+    <div class="col-sm-6 col-lg-4">
+      <article class="news-card h-100 rounded-4 overflow-hidden shadow-sm d-flex flex-column">
+        <div class="news-card-img-wrapper">
+          {% if noticia.imagen_destacada %}
+          <img src="{{ noticia.imagen_destacada.url }}"
+               alt="{{ noticia.titulo }}"
+               class="news-card-img" />
+          {% else %}
+          <div class="news-card-img-placeholder d-flex align-items-center justify-content-center">
+            <i class="bi bi-newspaper fs-1 text-white-50"></i>
+          </div>
+          {% endif %}
+          <span class="news-cat-badge">{{ noticia.categoria.nombre }}</span>
+        </div>
+        <div class="news-card-body flex-grow-1 d-flex flex-column p-4">
+          <h2 class="news-card-title" style="font-size:1.05rem;">
+            <a href="{{ noticia.get_absolute_url }}" class="text-decoration-none">
+              {{ noticia.titulo|truncatewords:12 }}
+            </a>
+          </h2>
+          <p class="news-card-excerpt flex-grow-1">
+            {{ noticia.resumen|default:noticia.contenido|truncatewords:22 }}
+          </p>
+          <div class="news-card-meta d-flex align-items-center justify-content-between mt-3">
+            <small class="text-muted">
+              <i class="bi bi-person me-1"></i>
+              {{ noticia.autor.get_full_name|default:"Redacción" }}
+            </small>
+            <small class="text-muted">
+              <i class="bi bi-eye me-1"></i>{{ noticia.vistas }}
+            </small>
+          </div>
+          <div class="mt-1">
+            <small class="text-muted">
+              <i class="bi bi-calendar3 me-1"></i>
+              {% if noticia.fecha_publicacion %}
+                {{ noticia.fecha_publicacion|date:"d M Y" }}
+              {% else %}
+                {{ noticia.fecha_creacion|date:"d M Y" }}
+              {% endif %}
+            </small>
+          </div>
+        </div>
+      </article>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Paginación -->
+  {% if noticias.has_other_pages %}
+  <nav class="d-flex justify-content-center mt-5" aria-label="Paginación">
+    <ul class="pagination pagination-custom">
+      {% if noticias.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?pagina={{ noticias.previous_page_number }}">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+      </li>
+      {% endif %}
+      {% for num in noticias.paginator.page_range %}
+      <li class="page-item {% if noticias.number == num %}active{% endif %}">
+        <a class="page-link" href="?pagina={{ num }}">{{ num }}</a>
+      </li>
+      {% endfor %}
+      {% if noticias.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?pagina={{ noticias.next_page_number }}">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <div class="text-center py-5">
+    <i class="bi bi-folder2-open fs-1 text-muted mb-3 d-block"></i>
+    <h4 class="text-muted">No hay noticias en esta categoría aún.</h4>
+    <a href="{% url 'core:index' %}" class="btn btn-primary mt-3">
+      <i class="bi bi-house me-1"></i>Volver al inicio
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

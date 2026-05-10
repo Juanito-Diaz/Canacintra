@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ publicacion.titulo }}{% endblock %}
+{% block meta_description %}{{ publicacion.resumen|default:publicacion.contenido|truncatewords:30 }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row g-5">
+
+    <!-- ── Artículo principal ── -->
+    <div class="col-lg-8">
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Inicio</a></li>
+          <li class="breadcrumb-item">
+            <a href="{{ publicacion.categoria.get_absolute_url }}">{{ publicacion.categoria.nombre }}</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">
+            {{ publicacion.titulo|truncatewords:6 }}
+          </li>
+        </ol>
+      </nav>
+
+      <article class="detalle-articulo">
+        <!-- Categoría -->
+        <a href="{{ publicacion.categoria.get_absolute_url }}" class="badge-categoria mb-3 d-inline-block">
+          <i class="bi bi-tag me-1"></i>{{ publicacion.categoria.nombre }}
+        </a>
+
+        <!-- Título -->
+        <h1 class="detalle-titulo">{{ publicacion.titulo }}</h1>
+
+        <!-- Meta: autor, fecha, vistas -->
+        <div class="detalle-meta d-flex flex-wrap align-items-center gap-3 mb-4 pb-3 border-bottom">
+          <div class="d-flex align-items-center gap-2">
+            <div class="author-avatar author-avatar-md">
+              {{ publicacion.autor.first_name|first|default:"R" }}
+            </div>
+            <div>
+              <span class="fw-semibold">
+                {{ publicacion.autor.get_full_name|default:"Redacción CANACINTRA" }}
+              </span>
+              <small class="d-block text-muted">Autor</small>
+            </div>
+          </div>
+          <div class="vr"></div>
+          <div>
+            <i class="bi bi-calendar3 me-1 text-muted"></i>
+            <span>
+              {% if publicacion.fecha_publicacion %}
+                {{ publicacion.fecha_publicacion|date:"d \d\e F \d\e Y" }}
+              {% else %}
+                {{ publicacion.fecha_creacion|date:"d \d\e F \d\e Y" }}
+              {% endif %}
+            </span>
+          </div>
+          <div>
+            <i class="bi bi-eye me-1 text-muted"></i>
+            <span>{{ publicacion.vistas }} vistas</span>
+          </div>
+        </div>
+
+        <!-- Imagen destacada -->
+        {% if publicacion.imagen_destacada %}
+        <figure class="mb-4">
+          <img src="{{ publicacion.imagen_destacada.url }}"
+               alt="{{ publicacion.titulo }}"
+               class="img-fluid rounded-4 shadow w-100"
+               style="max-height: 480px; object-fit: cover;" />
+        </figure>
+        {% endif %}
+
+        <!-- Contenido -->
+        <div class="detalle-contenido">
+          {{ publicacion.contenido|linebreaks }}
+        </div>
+
+        <!-- Archivos adjuntos -->
+        {% if archivos %}
+        <div class="archivos-adjuntos mt-5 p-4 rounded-4 bg-light">
+          <h4 class="mb-3">
+            <i class="bi bi-paperclip me-2 text-primary"></i>Archivos adjuntos
+          </h4>
+          <div class="row g-3">
+            {% for archivo in archivos %}
+            <div class="col-sm-6">
+              <a href="{{ archivo.archivo.url }}"
+                 class="d-flex align-items-center gap-3 p-3 rounded-3 bg-white shadow-sm text-decoration-none hover-shadow"
+                 target="_blank" rel="noopener">
+                <div class="archivo-icono">
+                  {% if archivo.tipo == 'pdf' %}
+                    <i class="bi bi-file-earmark-pdf text-danger fs-4"></i>
+                  {% elif archivo.tipo == 'word' %}
+                    <i class="bi bi-file-earmark-word text-primary fs-4"></i>
+                  {% elif archivo.tipo == 'excel' %}
+                    <i class="bi bi-file-earmark-excel text-success fs-4"></i>
+                  {% elif archivo.tipo == 'imagen' %}
+                    <i class="bi bi-file-earmark-image text-info fs-4"></i>
+                  {% else %}
+                    <i class="bi bi-file-earmark text-secondary fs-4"></i>
+                  {% endif %}
+                </div>
+                <div class="flex-grow-1">
+                  <div class="fw-semibold text-dark small">{{ archivo.nombre }}</div>
+                  <small class="text-muted">{{ archivo.tamanio_legible }}</small>
+                </div>
+                <i class="bi bi-download text-muted"></i>
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </article>
+    </div>
+
+    <!-- ── Sidebar ── -->
+    <aside class="col-lg-4" aria-label="Contenido relacionado">
+      <!-- Noticias relacionadas -->
+      {% if relacionadas %}
+      <div class="sidebar-widget rounded-4 p-4 mb-4 bg-light">
+        <h5 class="sidebar-title">
+          <i class="bi bi-collection me-2 text-primary"></i>Relacionadas
+        </h5>
+        {% for rel in relacionadas %}
+        <div class="sidebar-item d-flex gap-3 {% if not forloop.last %}border-bottom mb-3 pb-3{% endif %}">
+          {% if rel.imagen_destacada %}
+          <img src="{{ rel.imagen_destacada.url }}" alt="{{ rel.titulo }}"
+               class="rounded-3 flex-shrink-0"
+               style="width:75px;height:55px;object-fit:cover;" />
+          {% else %}
+          <div class="rounded-3 flex-shrink-0 bg-secondary d-flex align-items-center justify-content-center"
+               style="width:75px;height:55px;">
+            <i class="bi bi-newspaper text-white-50"></i>
+          </div>
+          {% endif %}
+          <div>
+            <a href="{{ rel.get_absolute_url }}" class="sidebar-link text-decoration-none">
+              {{ rel.titulo|truncatewords:8 }}
+            </a>
+            <small class="d-block text-muted">
+              {% if rel.fecha_publicacion %}
+                {{ rel.fecha_publicacion|date:"d M Y" }}
+              {% else %}
+                {{ rel.fecha_creacion|date:"d M Y" }}
+              {% endif %}
+            </small>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Categorías -->
+      <div class="sidebar-widget rounded-4 p-4 bg-light">
+        <h5 class="sidebar-title">
+          <i class="bi bi-grid me-2 text-primary"></i>Categorías
+        </h5>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          {% for cat in categorias %}
+          <a href="{{ cat.get_absolute_url }}" class="cat-pill">{{ cat.nombre }}</a>
+          {% endfor %}
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}
