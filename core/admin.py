@@ -132,14 +132,21 @@ class PublicacionAdmin(admin.ModelAdmin):
 # ─────────────────────────────────────────────
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'slug', 'total_publicaciones', 'creada_en')
+    list_display = ('nombre', 'slug', 'icono_preview', 'total_publicaciones', 'creada_en')
     search_fields = ('nombre', 'descripcion')
     prepopulated_fields = {'slug': ('nombre',)}
     ordering = ('nombre',)
+    fields = ('nombre', 'slug', 'icono_css', 'descripcion')
 
     def total_publicaciones(self, obj):
         return obj.publicaciones.count()
     total_publicaciones.short_description = 'Publicaciones'
+
+    def icono_preview(self, obj):
+        if obj.icono_css:
+            return format_html('<i class="bi {}" style="font-size: 1.2rem; color: #213448;"></i>', obj.icono_css)
+        return '—'
+    icono_preview.short_description = 'Icono'
 
 
 # ─────────────────────────────────────────────

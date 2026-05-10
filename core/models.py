@@ -30,6 +30,13 @@ class Categoria(models.Model):
         blank=True,
         help_text='Se genera automáticamente a partir del nombre.',
     )
+    icono_css = models.CharField(
+        max_length=50,
+        blank=True,
+        default='bi-tag',
+        verbose_name='Icono (Bootstrap Icons)',
+        help_text='Ejemplo: bi-graph-up-arrow, bi-buildings, etc.',
+    )
     creada_en = models.DateTimeField(auto_now_add=True)
 
     class Meta:

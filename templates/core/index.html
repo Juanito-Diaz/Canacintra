@@ -27,7 +27,12 @@
           {% endif %}
           <div class="hero-overlay position-absolute bottom-0 start-0 end-0 p-4">
             <span class="badge-categoria mb-2 d-inline-block">
-              <i class="bi bi-tag me-1"></i>{{ principal.categoria.nombre }}
+              {% if principal.categoria.icono_css %}
+                <i class="bi {{ principal.categoria.icono_css }} me-1"></i>
+              {% else %}
+                <i class="bi bi-tag me-1"></i>
+              {% endif %}
+              {{ principal.categoria.nombre }}
             </span>
             <h1 class="hero-title">
               <a href="{{ principal.get_absolute_url }}" class="text-white stretched-link text-decoration-none">
@@ -128,8 +133,12 @@
               <i class="bi bi-newspaper fs-1 text-white-50"></i>
             </div>
             {% endif %}
-            <a href="{{ noticia.categoria.get_absolute_url }}"
-               class="news-cat-badge">{{ noticia.categoria.nombre }}</a>
+            <a href="{{ noticia.categoria.get_absolute_url }}" class="news-cat-badge">
+              {% if noticia.categoria.icono_css %}
+                <i class="bi {{ noticia.categoria.icono_css }} me-1"></i>
+              {% endif %}
+              {{ noticia.categoria.nombre }}
+            </a>
           </div>
           <!-- Contenido -->
           <div class="news-card-body flex-grow-1 d-flex flex-column p-4">

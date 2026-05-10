@@ -50,3 +50,6 @@ Portal:  http://127.0.0.1:8000/
 Admin:   http://127.0.0.1:8000/admin/
 Usuario: admin
 Contraseña: [admin1234]
+
+Comando para abrir el portal(en la terminal):
+python manage.py runserver

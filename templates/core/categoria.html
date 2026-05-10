@@ -9,7 +9,12 @@
   <!-- Encabezado de categoría -->
   <div class="categoria-header mb-5 p-4 rounded-4 text-center shadow-sm" style="background: linear-gradient(135deg, var(--color-primary), var(--color-primary-mid));">
     <span class="badge bg-white text-primary mb-2">Categoría</span>
-    <h1 class="text-white fw-bold">{{ categoria.nombre }}</h1>
+    <h1 class="text-white fw-bold">
+      {% if categoria.icono_css %}
+        <i class="bi {{ categoria.icono_css }} me-2"></i>
+      {% endif %}
+      {{ categoria.nombre }}
+    </h1>
     {% if categoria.descripcion %}
     <p class="text-white-75 mb-0">{{ categoria.descripcion }}</p>
     {% endif %}
@@ -31,7 +36,12 @@
             <i class="bi bi-newspaper fs-1 text-white-50"></i>
           </div>
           {% endif %}
-          <span class="news-cat-badge">{{ noticia.categoria.nombre }}</span>
+          <span class="news-cat-badge">
+            {% if noticia.categoria.icono_css %}
+              <i class="bi {{ noticia.categoria.icono_css }} me-1"></i>
+            {% endif %}
+            {{ noticia.categoria.nombre }}
+          </span>
         </div>
         <div class="news-card-body flex-grow-1 d-flex flex-column p-4">
           <h2 class="news-card-title" style="font-size:1.05rem;">
