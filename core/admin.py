@@ -144,7 +144,7 @@ class CategoriaAdmin(admin.ModelAdmin):
 
     def icono_preview(self, obj):
         if obj.icono_css:
-            return format_html('<i class="bi {}" style="font-size: 1.2rem; color: #213448;"></i>', obj.icono_css)
+            return format_html('<i class="bi {}" style="font-size: 1.2rem; color: #1B3C53;"></i>', obj.icono_css)
         return '—'
     icono_preview.short_description = 'Icono'
 
