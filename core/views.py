@@ -4,13 +4,17 @@ Vistas del Portal de Noticias CANACINTRA.
 Sistema de navegación por categorías + buscador de noticias.
 """
 
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
 from django.core.paginator import Paginator
 from django.http import JsonResponse
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
-from .models import Publicacion, Categoria, Estatus, Archivo
+from .models import Publicacion, Categoria, Estatus, Archivo, Comentario
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 
 
 # ─────────────────────────────────────────────
@@ -32,20 +36,20 @@ def _publicaciones_activas():
 def index(request):
     """
     Página principal: muestra las últimas noticias publicadas con paginación.
-    Incluye las 3 noticias más recientes como 'destacadas'.
+    Incluye las 5 noticias más actuales para el carrusel superior.
     """
     qs = _publicaciones_activas()
-    destacadas = qs[:3]
-    resto = qs[3:]
-
-    paginator = Paginator(resto, 9)
+    recientes = qs[:5]  # Para el carrusel solicitado en hazlo.md
+    
+    # El listado de abajo puede empezar después de las destacadas o incluir todas
+    paginator = Paginator(qs, 9)
     pagina = request.GET.get('pagina', 1)
     noticias_paginadas = paginator.get_page(pagina)
 
     categorias = Categoria.objects.all().order_by('nombre')
 
     context = {
-        'destacadas': destacadas,
+        'recientes': recientes,
         'noticias': noticias_paginadas,
         'categorias': categorias,
         'titulo_pagina': 'Noticias CANACINTRA',
@@ -60,6 +64,7 @@ def publicacion_detalle(request, slug):
     """
     Muestra el contenido completo de una publicación.
     Incrementa el contador de vistas.
+    Gestiona el envío de comentarios.
     """
     publicacion = get_object_or_404(
         Publicacion,
@@ -67,11 +72,24 @@ def publicacion_detalle(request, slug):
         estatus__nombre=Estatus.PUBLICADA,
     )
 
+    if request.method == 'POST' and request.user.is_authenticated:
+        texto = request.POST.get('texto', '').strip()
+        if texto:
+            Comentario.objects.create(
+                publicacion=publicacion,
+                usuario=request.user,
+                texto=texto,
+                estado=Comentario.ESTADO_PENDIENTE
+            )
+            messages.success(request, 'Tu comentario aparecerá una vez que sea revisado por un administrador.')
+            return redirect('core:publicacion_detalle', slug=slug)
+
     # Incrementar contador de vistas
     Publicacion.objects.filter(pk=publicacion.pk).update(vistas=publicacion.vistas + 1)
     publicacion.vistas += 1
 
     archivos = publicacion.archivos.all()
+    comentarios = publicacion.comentarios.filter(estado=Comentario.ESTADO_APROBADO).select_related('usuario')
 
     # Noticias relacionadas de la misma categoría
     relacionadas = (
@@ -83,6 +101,7 @@ def publicacion_detalle(request, slug):
     context = {
         'publicacion': publicacion,
         'archivos': archivos,
+        'comentarios': comentarios,
         'relacionadas': relacionadas,
         'categorias': Categoria.objects.all(),
         'titulo_pagina': publicacion.titulo,
@@ -185,3 +204,35 @@ def buscar_ajax(request):
         ]
 
     return JsonResponse({'resultados': datos, 'query': query})
+
+
+# ─────────────────────────────────────────────
+#  Vista: Redirección post-login según rol
+# ─────────────────────────────────────────────
+@login_required
+def login_redirect(request):
+    """
+    Redirige al usuario tras iniciar sesión:
+    - Admin/Staff -> Panel de Administración
+    - Usuario normal -> Portada del sitio
+    """
+    if request.user.is_superuser:
+        return redirect('/admin/')
+    return redirect('core:index')
+
+
+def registro(request):
+    """Vista para el registro de nuevos usuarios."""
+    if request.user.is_authenticated:
+        return redirect('core:index')
+        
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '¡Cuenta creada exitosamente! Ya puedes iniciar sesión.')
+            return redirect('core:login')
+    else:
+        form = UserCreationForm()
+    
+    return render(request, 'core/registro.html', {'form': form})

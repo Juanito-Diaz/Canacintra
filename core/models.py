@@ -300,4 +300,56 @@ class Perfil(models.Model):
     def avatar_url(self):
         if self.foto_perfil:
             return self.foto_perfil.url
-        return '/static/core/img/avatar_default.png'
+        # ─────────────────────────────────────────────
+#  Comentario
+# ─────────────────────────────────────────────
+class Comentario(models.Model):
+    """Comentarios de los usuarios en las noticias."""
+    ESTADO_PENDIENTE = 'pendiente'
+    ESTADO_APROBADO = 'aprobado'
+
+    ESTADOS = [
+        (ESTADO_PENDIENTE, 'Pendiente'),
+        (ESTADO_APROBADO, 'Aprobado'),
+    ]
+
+    publicacion = models.ForeignKey(
+        Publicacion,
+        on_delete=models.CASCADE,
+        related_name='comentarios',
+        verbose_name='Publicación',
+    )
+    usuario = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comentarios',
+        verbose_name='Usuario',
+    )
+    usuario_nombre = models.CharField(
+        max_length=255, 
+        blank=True, 
+        verbose_name='Nombre del usuario (DB View)',
+        help_text='Copia denormalizada del nombre para visualización rápida en BD.'
+    )
+    texto = models.TextField(verbose_name='Comentario')
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS,
+        default=ESTADO_PENDIENTE,
+        verbose_name='Estado',
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')
+
+    class Meta:
+        verbose_name = 'Comentario'
+        verbose_name_plural = 'Comentarios'
+        ordering = ['-fecha_creacion']
+
+    def __str__(self):
+        return f"Comentario de {self.usuario.username} en {self.publicacion.titulo}"
+
+    def save(self, *args, **kwargs):
+        # Guardar el nombre del usuario para facilitar la lectura en la BD
+        if self.usuario:
+            self.usuario_nombre = self.usuario.get_full_name() or self.usuario.username
+        super().save(*args, **kwargs)

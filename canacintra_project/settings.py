@@ -53,6 +53,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.core_context',
             ],
         },
     },
@@ -147,4 +148,6 @@ LOGGING = {
 
 # Crear directorio de logs si no existe
 LOGS_DIR = BASE_DIR / 'logs'
-LOGS_DIR.mkdir(exist_ok=True)
+# Configuración de Redirección de Login
+LOGIN_URL = 'core:login'
+LOGIN_REDIRECT_URL = 'core:login_redirect'

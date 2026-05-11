@@ -8,7 +8,31 @@ acciones masivas y visualización enriquecida.
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils import timezone
-from .models import Publicacion, Categoria, Estatus, Archivo, Perfil
+from .models import Publicacion, Categoria, Estatus, Archivo, Perfil, Comentario
+
+# ─────────────────────────────────────────────
+#  Admin: Comentario
+# ─────────────────────────────────────────────
+@admin.register(Comentario)
+class ComentarioAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'publicacion', 'estado', 'fecha_creacion', 'texto_truncado')
+    list_filter = ('estado', 'fecha_creacion')
+    search_fields = ('usuario__username', 'publicacion__titulo', 'texto')
+    actions = ['aprobar_comentarios', 'rechazar_comentarios']
+
+    def texto_truncado(self, obj):
+        return obj.texto[:50] + '...' if len(obj.texto) > 50 else obj.texto
+    texto_truncado.short_description = 'Contenido'
+
+    @admin.action(description='✅ Aprobar comentarios')
+    def aprobar_comentarios(self, request, queryset):
+        queryset.update(estado=Comentario.ESTADO_APROBADO)
+        self.message_user(request, 'Comentarios aprobados correctamente.')
+
+    @admin.action(description='❌ Rechazar/Pendiente')
+    def rechazar_comentarios(self, request, queryset):
+        queryset.update(estado=Comentario.ESTADO_PENDIENTE)
+        self.message_user(request, 'Comentarios marcados como pendientes.')
 
 
 # ─────────────────────────────────────────────
@@ -125,6 +149,13 @@ class PublicacionAdmin(admin.ModelAdmin):
         estatus_cap, _ = Estatus.objects.get_or_create(nombre=Estatus.CAPTURA)
         count = queryset.update(estatus=estatus_cap, fecha_publicacion=None)
         self.message_user(request, f'{count} publicación(es) movidas a Captura.')
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Filtra el campo autor para mostrar solo usuarios con rol de staff/autor."""
+        if db_field.name == "autor":
+            from django.contrib.auth.models import User
+            kwargs["queryset"] = User.objects.filter(is_staff=True)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 # ─────────────────────────────────────────────

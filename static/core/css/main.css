@@ -157,29 +157,88 @@ img { max-width: 100%; }
   background: rgba(255,255,255,.18);
 }
 
-/* Search input */
-.search-input {
-  border: none;
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm) !important;
-  background: rgba(255,255,255,.12);
-  color: #fff;
-  font-size: .88rem;
-  width: 220px;
-  transition: var(--transition);
+/* Search Modern Pill */
+.search-container {
+  position: relative;
+  transition: all 0.3s ease;
 }
-.search-input::placeholder { color: rgba(255,255,255,.6); }
-.search-input:focus {
-  background: rgba(255,255,255,.2);
-  color: #fff;
-  box-shadow: none;
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50px;
+  padding: 4px 4px 4px 16px;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  width: 210px;
+}
+
+.search-box:focus-within {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
   width: 280px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.search-input {
+  background: transparent !important;
+  border: none !important;
+  color: #fff !important;
+  font-size: 0.85rem;
+  width: 100%;
+  outline: none !important;
+  padding: 0;
+  box-shadow: none !important;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.search-btn {
+  background: var(--color-primary-light);
+  border: none;
+  color: #fff;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.search-btn:hover {
+  background: #fff;
+  color: var(--color-primary);
+  transform: scale(1.1);
+}
+
+.search-btn i {
+  font-size: 0.85rem;
+}
+
+/* User Profile Mini Avatar */
+.user-avatar-mini {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  font-size: 1.1rem;
 }
 
 .btn-accent {
   background: var(--color-accent);
   border-color: var(--color-accent);
   color: #fff;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0 !important;
+  border-radius: var(--radius-sm);
 }
 .btn-accent:hover {
   background: var(--color-accent-hover);
@@ -239,6 +298,59 @@ img { max-width: 100%; }
   font-size: .72rem;
   color: var(--color-primary-mid);
   font-weight: 600;
+}
+
+/* ── Carousel Arrows Styling ── */
+.carousel-control-prev,
+.carousel-control-next {
+  width: 45px;
+  height: 45px;
+  background: rgba(27,60,83, 0.4);
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0 20px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.carousel-section:hover .carousel-control-prev,
+.carousel-section:hover .carousel-control-next,
+#newsCarousel:hover .carousel-control-prev,
+#newsCarousel:hover .carousel-control-next {
+  opacity: 1;
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+  background: var(--color-primary);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Indicators modern dots */
+.carousel-indicators [data-bs-target] {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin: 0 6px;
+  background-color: #fff;
+  opacity: 0.5;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.carousel-indicators .active {
+  opacity: 1;
+  transform: scale(1.4);
+  background-color: var(--color-primary-light);
 }
 
 /* ═══════════════════════════════════════
@@ -556,9 +668,12 @@ html { scroll-behavior: smooth; }
 /* ═══════════════════════════════════════
    RESPONSIVE TWEAKS
 ═══════════════════════════════════════ */
+@media (max-width: 991px) {
+  .search-box { width: 100%; }
+  .search-box:focus-within { width: 100%; }
+}
+
 @media (max-width: 768px) {
-  .search-input { width: 160px; }
-  .search-input:focus { width: 200px; }
   .resultado-img-wrapper { display: none; }
   .news-card-img-wrapper { height: 160px; }
 }

@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5 py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card border-0 shadow-lg" style="border-radius: var(--radius-lg); overflow: hidden;">
+        <div class="card-header bg-primary text-white text-center py-4 border-0">
+          <div class="brand-icon mx-auto mb-3" style="width: 60px; height: 60px; font-size: 2rem;">
+            <i class="bi bi-person-lock"></i>
+          </div>
+          <h2 class="h4 fw-bold mb-0">Portal CANACINTRA</h2>
+          <p class="small text-white-50 mb-0">Ingresa a tu cuenta de noticias</p>
+        </div>
+        <div class="card-body p-4 p-lg-5">
+          <form method="post" action="{% url 'core:login' %}" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            {% if form.errors %}
+              <div class="alert alert-danger d-flex align-items-center gap-2 mb-4 py-2" style="font-size: 0.85rem;">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <div>Usuario o contraseña incorrectos.</div>
+              </div>
+            {% endif %}
+
+            <div class="mb-3">
+              <label for="id_username" class="form-label small fw-bold text-muted">Usuario</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-person"></i></span>
+                <input type="text" name="username" id="id_username" class="form-control bg-light border-start-0" placeholder="Tu usuario" required autofocus>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label for="id_password" class="form-label small fw-bold text-muted">Contraseña</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock"></i></span>
+                <input type="password" name="password" id="id_password" class="form-control bg-light border-x-0" placeholder="••••••••" required>
+                <button class="btn btn-light border border-start-0" type="button" id="togglePassword">
+                  <i class="bi bi-eye" id="eyeIcon"></i>
+                </button>
+              </div>
+            </div>
+
+            <script>
+              const togglePassword = document.querySelector('#togglePassword');
+              const password = document.querySelector('#id_password');
+              const eyeIcon = document.querySelector('#eyeIcon');
+
+              togglePassword.addEventListener('click', function (e) {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                eyeIcon.classList.toggle('bi-eye');
+                eyeIcon.classList.toggle('bi-eye-slash');
+              });
+            </script>
+
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold rounded-pill mb-3">
+              Iniciar Sesión
+            </button>
+            
+            <div class="text-center mt-3">
+              <p class="small text-muted mb-1">¿No tienes cuenta?</p>
+              <a href="{% url 'core:registro' %}" class="fw-bold text-primary text-decoration-none">Regístrate gratis</a>
+            </div>
+            
+            <hr class="my-4 opacity-10">
+
+            <div class="text-center">
+              <a href="{% url 'core:index' %}" class="text-muted small">
+                <i class="bi bi-arrow-left me-1"></i> Volver al portal
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  body {
+    background-color: var(--color-bg) !important;
+  }
+  .input-group-text {
+    border-color: #e9ecef;
+    color: var(--color-primary-light);
+  }
+  .form-control:focus {
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 0 0.25rem rgba(27,60,83,0.1);
+  }
+</style>
+{% endblock %}

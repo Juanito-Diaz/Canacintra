@@ -4,6 +4,7 @@ Rutas del portal de noticias CANACINTRA.
 """
 
 from django.urls import path
+from django.contrib.auth import views as auth_views
 from . import views
 
 app_name = 'core'
@@ -23,4 +24,10 @@ urlpatterns = [
 
     # Endpoint AJAX para autocompletado
     path('api/buscar/', views.buscar_ajax, name='buscar_ajax'),
+
+    # Autenticación
+    path('login/', auth_views.LoginView.as_view(template_name='core/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='core:index'), name='logout'),
+    path('registro/', views.registro, name='registro'),
+    path('accounts/profile/', views.login_redirect, name='login_redirect'),
 ]
