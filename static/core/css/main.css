@@ -62,6 +62,17 @@ img { max-width: 100%; }
   box-shadow: 0 2px 12px rgba(0,0,0,.2);
 }
 
+.navbar-brand {
+  transition: transform 0.3s ease;
+}
+.navbar-brand:hover {
+  transform: scale(1.03);
+}
+.navbar-brand:hover .brand-icon {
+  background: rgba(255,255,255,0.25);
+  transform: rotate(5deg);
+}
+
 .brand-icon {
   width: 42px;
   height: 42px;
@@ -74,6 +85,7 @@ img { max-width: 100%; }
   font-size: 1.3rem;
   color: #fff;
   flex-shrink: 0;
+  transition: all 0.3s ease;
 }
 
 .brand-name {
@@ -95,14 +107,54 @@ img { max-width: 100%; }
   color: rgba(255,255,255,.85) !important;
   font-weight: 500;
   font-size: .88rem;
-  padding: .4rem .75rem !important;
+  padding: .4rem .85rem !important;
   border-radius: var(--radius-sm);
-  transition: var(--transition);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  display: flex;
+  align-items: center;
 }
-.canacintra-navbar .nav-link:hover,
+
+.canacintra-navbar .nav-link i {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.canacintra-navbar .nav-link:hover {
+  color: #fff !important;
+  background: rgba(255,255,255,.12);
+  transform: translateY(-2px);
+}
+
+.canacintra-navbar .nav-link:hover i {
+  transform: scale(1.2) rotate(-5deg);
+  color: #fff;
+}
+
+/* Subrayado animado */
+.canacintra-navbar .nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: #fff;
+  transition: width 0.3s ease, left 0.3s ease;
+  transform: translateX(-50%);
+  border-radius: 10px;
+  opacity: 0;
+}
+
+.canacintra-navbar .nav-link:hover::after,
+.canacintra-navbar .nav-link.active::after {
+  width: 40%;
+  opacity: 1;
+}
+
 .canacintra-navbar .nav-link.active {
   color: #fff !important;
-  background: rgba(255,255,255,.15);
+  background: rgba(255,255,255,.18);
 }
 
 /* Search input */
