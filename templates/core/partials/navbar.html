@@ -1,17 +1,17 @@
 {% load static %}
 <!-- ════════════════════════════════════════════
      Navbar CANACINTRA — partial: navbar.html
-════════════════════════════════════════════ -->
+     ════════════════════════════════════════════ -->
 <nav class="navbar navbar-expand-lg navbar-dark canacintra-navbar sticky-top" id="navbar-principal">
   <div class="container">
-    <!-- Logo / Marca -->
-    <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'core:index' %}">
-      <div class="brand-icon">
-        <i class="bi bi-newspaper"></i>
-      </div>
-      <div>
-        <span class="brand-name">CANACINTRA</span>
-        <small class="brand-sub d-block">Portal de Noticias</small>
+    <!-- Logotipo a la izquierda -->
+    <a class="navbar-brand brand-logo-container" href="{% url 'core:index' %}">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-newspaper fs-4 text-white"></i>
+        <div class="lh-1">
+          <span class="brand-name fw-bold" style="letter-spacing: 1px; font-size: 1.25rem;">CANACINTRA</span>
+          <small class="brand-sub d-block text-white-50" style="font-size: 0.65rem; text-transform: uppercase;">Noticias</small>
+        </div>
       </div>
     </a>
 
@@ -22,109 +22,97 @@
     </button>
 
     <div class="collapse navbar-collapse" id="navbarMenu">
-      <!-- Navegación por categorías -->
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+      <!-- Enlaces superiores de navegación rápida (Inicio, Categorías, Perfil) -->
+      <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1 gap-lg-3">
         <li class="nav-item">
-          <a class="nav-link {% if request.path == '/' %}active{% endif %}"
-             href="{% url 'core:index' %}">
+          <a class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}" href="{% url 'core:index' %}">
             <i class="bi bi-house-door me-1"></i>Inicio
           </a>
         </li>
-        {% for cat in categorias %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarCategorias" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-tags me-1"></i>Categorías
+          </a>
+          <ul class="dropdown-menu shadow border-0 mt-2 animate__animated animate__fadeIn" aria-labelledby="navbarCategorias">
+            {% for cat in categorias %}
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="{{ cat.get_absolute_url }}">
+                {% if cat.icono_css %}
+                  <i class="bi {{ cat.icono_css }} text-primary"></i>
+                {% else %}
+                  <i class="bi bi-tag text-primary"></i>
+                {% endif %}
+                {{ cat.nombre }}
+              </a>
+            </li>
+            {% empty %}
+            <li><span class="dropdown-item text-muted">No hay categorías</span></li>
+            {% endfor %}
+          </ul>
+        </li>
         <li class="nav-item">
-          <a class="nav-link {% if request.path == cat.get_absolute_url %}active{% endif %}"
-             href="{{ cat.get_absolute_url }}">
-            {% if cat.icono_css %}
-              <i class="bi {{ cat.icono_css }} me-1"></i>
-            {% else %}
-              <i class="bi bi-tag me-1"></i>
-            {% endif %}
-            {{ cat.nombre }}
+          <a class="nav-link {% if 'dashboard' in request.path %}active{% endif %}" href="{% url 'core:admin_perfil' %}">
+            <i class="bi bi-person-circle me-1"></i>Perfil
           </a>
         </li>
-        {% endfor %}
       </ul>
 
-      <!-- Buscador Moderno Expandible -->
-      <div class="search-container ms-lg-auto me-lg-3 my-3 my-lg-0">
-        <form class="search-box" action="{% url 'core:buscar' %}" method="GET" id="form-busqueda">
-          <input
-            class="search-input"
-            type="search"
-            name="q"
-            id="input-busqueda"
-            placeholder="Buscar noticias…"
-            autocomplete="off"
-            aria-label="Buscar noticias"
-            value="{{ request.GET.q|default:'' }}"
-          />
-          <button class="search-btn" type="submit" aria-label="Buscar">
-            <i class="bi bi-search"></i>
-          </button>
-        </form>
-        <!-- Dropdown de sugerencias AJAX -->
-        <div id="sugerencias-busqueda" class="suggestions-dropdown d-none"></div>
-      </div>
-
-      <!-- Auth & Admin Links -->
-      <div class="auth-links ms-lg-3 d-flex gap-2">
-        {% if user.is_authenticated %}
-          <div class="dropdown">
-            <button class="btn btn-outline-light btn-sm dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <div class="user-avatar-mini">
-                {% if user.perfil.foto_perfil %}
-                  <img src="{{ user.perfil.foto_perfil.url }}" alt="{{ user.username }}" class="rounded-circle" style="width: 24px; height: 24px; object-fit: cover;">
-                {% else %}
-                  <i class="bi bi-person-circle"></i>
-                {% endif %}
-              </div>
-              <span>{{ user.username }}</span>
+      <!-- Barra de búsqueda y autenticación alineada a la derecha -->
+      <div class="d-flex align-items-center gap-3 ms-auto">
+        <!-- Buscador Moderno -->
+        <div class="search-container">
+          <form class="search-box mb-0" action="{% url 'core:buscar' %}" method="GET" id="form-busqueda">
+            <input
+              class="search-input"
+              type="search"
+              name="q"
+              id="input-busqueda"
+              placeholder="Buscar..."
+              autocomplete="off"
+              aria-label="Buscar noticias"
+              value="{{ request.GET.q|default:'' }}"
+            />
+            <button class="search-btn" type="submit" aria-label="Buscar">
+              <i class="bi bi-search"></i>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
-              <li class="dropdown-header text-uppercase small fw-bold text-muted">Mi Cuenta</li>
-              
-              {% if user.is_staff %}
-              <li>
-                <a class="dropdown-item d-flex align-items-center justify-content-between gap-2" href="/admin/">
-                  <span class="d-flex align-items-center gap-2">
-                    <i class="bi bi-shield-lock text-primary"></i> Panel Admin
-                  </span>
-                  {% if conteo_pendientes > 0 %}
-                    <span class="badge rounded-pill bg-danger" style="font-size: 0.65rem;">
-                      {{ conteo_pendientes }}
-                    </span>
-                  {% endif %}
-                </a>
-              </li>
-              <li><hr class="dropdown-divider"></li>
-              {% endif %}
+          </form>
+          <div id="sugerencias-busqueda" class="suggestions-dropdown d-none"></div>
+        </div>
 
-              <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="/admin/password_change/">
-                  <i class="bi bi-key"></i> Cambiar Contraseña
-                </a>
-              </li>
-              
-              <li><hr class="dropdown-divider"></li>
-              
-              <li>
-                <form action="{% url 'core:logout' %}" method="post" class="px-0">
-                  {% csrf_token %}
-                  <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger">
-                    <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-                  </button>
-                </form>
-              </li>
-            </ul>
-          </div>
-        {% else %}
-          <a href="{% url 'core:login' %}" class="btn btn-outline-light btn-sm px-3 rounded-pill">
-            <i class="bi bi-box-arrow-in-right me-1"></i> Ingresar
-          </a>
-        {% endif %}
+        <!-- Auth Links -->
+        <div class="auth-links">
+          {% if user.is_authenticated %}
+            <div class="dropdown">
+              <button class="btn btn-outline-light btn-sm dropdown-toggle d-flex align-items-center gap-2 px-3 rounded-pill" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="user-avatar-mini" style="width: 20px; height: 20px; overflow: hidden; border-radius: 50%;">
+                  {% if user.perfil.foto_perfil %}
+                    <img src="{{ user.perfil.foto_perfil.url }}" alt="{{ user.username }}" style="width: 20px; height: 20px; object-fit: cover;">
+                  {% else %}
+                    <i class="bi bi-person-circle text-white"></i>
+                  {% endif %}
+                </div>
+                <span class="small">{{ user.username }}</span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                <li class="dropdown-header text-uppercase small fw-bold text-muted">Panel de Usuario</li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'core:admin_perfil' %}">
+                    <i class="bi bi-person text-primary"></i> Mi Panel
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <form action="{% url 'core:logout' %}" method="post" class="px-0 mb-0" data-no-ajax="true">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger">
+                      <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                    </button>
+                  </form>
+                </li>
+              </ul>
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>
 </nav>
-
-

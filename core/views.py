@@ -11,10 +11,11 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
 
-from .models import Publicacion, Categoria, Estatus, Archivo, Comentario
+from .models import Publicacion, Categoria, Estatus, Archivo, Comentario, Perfil
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 
 
 # ─────────────────────────────────────────────
@@ -212,13 +213,9 @@ def buscar_ajax(request):
 @login_required
 def login_redirect(request):
     """
-    Redirige al usuario tras iniciar sesión:
-    - Admin/Staff -> Panel de Administración
-    - Usuario normal -> Portada del sitio
+    Redirige al usuario tras iniciar sesión a su perfil de administración.
     """
-    if request.user.is_superuser:
-        return redirect('/admin/')
-    return redirect('core:index')
+    return redirect('core:admin_perfil')
 
 
 def registro(request):
@@ -236,3 +233,327 @@ def registro(request):
         form = UserCreationForm()
     
     return render(request, 'core/registro.html', {'form': form})
+
+
+# ─────────────────────────────────────────────
+#  ADMIN FRONT-END PANEL VIEWS (AJAX/SPA Layout)
+# ─────────────────────────────────────────────
+
+def _get_dashboard_context(request, active_tab):
+    """Helper to determine base template and active tab for dashboard views."""
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+    base_template = 'core/partials/ajax_base.html' if is_ajax else 'core/dashboard_base.html'
+    return {
+        'base_template': base_template,
+        'active_tab': active_tab,
+        'is_ajax': is_ajax,
+    }
+
+
+@login_required
+def admin_perfil(request):
+    perfil, created = Perfil.objects.get_or_create(usuario=request.user)
+    context = _get_dashboard_context(request, 'perfil')
+    
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        
+        request.user.first_name = first_name
+        request.user.last_name = last_name
+        request.user.email = email
+        request.user.save()
+        
+        perfil.telefono = request.POST.get('telefono', '').strip()
+        perfil.bio = request.POST.get('bio', '').strip()
+        
+        if 'foto_perfil' in request.FILES:
+            perfil.foto_perfil = request.FILES['foto_perfil']
+            
+        perfil.save()
+        messages.success(request, 'Perfil actualizado correctamente.')
+        if not context['is_ajax']:
+            return redirect('core:admin_perfil')
+            
+    context['perfil'] = perfil
+    return render(request, 'core/admin_perfil.html', context)
+
+
+@login_required
+def admin_noticias(request):
+    if not request.user.is_staff:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'noticias'))
+        
+    publicaciones = Publicacion.objects.select_related('autor', 'categoria', 'estatus').all().order_by('-fecha_creacion')
+    context = _get_dashboard_context(request, 'noticias')
+    context['publicaciones'] = publicaciones
+    return render(request, 'core/admin_noticias.html', context)
+
+
+@login_required
+def admin_noticia_crear(request):
+    if not request.user.is_staff:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'noticias'))
+        
+    context = _get_dashboard_context(request, 'noticias')
+    categorias = Categoria.objects.all()
+    estatuses = Estatus.objects.all()
+    
+    if request.method == 'POST':
+        titulo = request.POST.get('titulo', '').strip()
+        contenido = request.POST.get('contenido', '').strip()
+        resumen = request.POST.get('resumen', '').strip()
+        categoria_id = request.POST.get('categoria', '')
+        estatus_id = request.POST.get('estatus', '')
+        
+        if not titulo or not contenido or not categoria_id or not estatus_id:
+            messages.error(request, 'Por favor completa todos los campos requeridos.')
+        else:
+            categoria = get_object_or_404(Categoria, pk=categoria_id)
+            estatus = get_object_or_404(Estatus, pk=estatus_id)
+            
+            noticia = Publicacion(
+                titulo=titulo,
+                contenido=contenido,
+                resumen=resumen,
+                categoria=categoria,
+                estatus=estatus,
+                autor=request.user
+            )
+            
+            if 'imagen_destacada' in request.FILES:
+                noticia.imagen_destacada = request.FILES['imagen_destacada']
+                
+            noticia.save()
+            messages.success(request, 'Publicación creada con éxito.')
+            return redirect('core:admin_noticias')
+            
+    context['categorias'] = categorias
+    context['estatuses'] = estatuses
+    context['modo'] = 'crear'
+    return render(request, 'core/admin_noticias_form.html', context)
+
+
+@login_required
+def admin_noticia_editar(request, pk):
+    if not request.user.is_staff:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'noticias'))
+        
+    noticia = get_object_or_404(Publicacion, pk=pk)
+    context = _get_dashboard_context(request, 'noticias')
+    categorias = Categoria.objects.all()
+    estatuses = Estatus.objects.all()
+    
+    if request.method == 'POST':
+        titulo = request.POST.get('titulo', '').strip()
+        contenido = request.POST.get('contenido', '').strip()
+        resumen = request.POST.get('resumen', '').strip()
+        categoria_id = request.POST.get('categoria', '')
+        estatus_id = request.POST.get('estatus', '')
+        
+        if not titulo or not contenido or not categoria_id or not estatus_id:
+            messages.error(request, 'Por favor completa todos los campos requeridos.')
+        else:
+            categoria = get_object_or_404(Categoria, pk=categoria_id)
+            estatus = get_object_or_404(Estatus, pk=estatus_id)
+            
+            noticia.titulo = titulo
+            noticia.contenido = contenido
+            noticia.resumen = resumen
+            noticia.categoria = categoria
+            noticia.estatus = estatus
+            
+            if 'imagen_destacada' in request.FILES:
+                noticia.imagen_destacada = request.FILES['imagen_destacada']
+                
+            noticia.save()
+            messages.success(request, 'Publicación actualizada con éxito.')
+            return redirect('core:admin_noticias')
+            
+    context['noticia'] = noticia
+    context['categorias'] = categorias
+    context['estatuses'] = estatuses
+    context['modo'] = 'editar'
+    return render(request, 'core/admin_noticias_form.html', context)
+
+
+@login_required
+def admin_noticia_eliminar(request, pk):
+    if not request.user.is_staff:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'noticias'))
+        
+    noticia = get_object_or_404(Publicacion, pk=pk)
+    noticia.delete()
+    messages.success(request, 'Publicación eliminada correctamente.')
+    return redirect('core:admin_noticias')
+
+
+@login_required
+def admin_comentarios(request):
+    if not request.user.is_staff:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'comentarios'))
+        
+    comentarios = Comentario.objects.select_related('usuario', 'publicacion').all().order_by('-fecha_creacion')
+    context = _get_dashboard_context(request, 'comentarios')
+    context['comentarios'] = comentarios
+    return render(request, 'core/admin_comentarios.html', context)
+
+
+@login_required
+def admin_comentario_eliminar(request, pk):
+    if not request.user.is_staff:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'comentarios'))
+        
+    comentario = get_object_or_404(Comentario, pk=pk)
+    comentario.delete()
+    messages.success(request, 'Comentario eliminado correctamente.')
+    return redirect('core:admin_comentarios')
+
+
+@login_required
+def admin_comentario_aprobar(request, pk):
+    if not request.user.is_staff:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'comentarios'))
+        
+    comentario = get_object_or_404(Comentario, pk=pk)
+    comentario.estado = Comentario.ESTADO_APROBADO
+    comentario.save()
+    messages.success(request, 'Comentario aprobado correctamente.')
+    return redirect('core:admin_comentarios')
+
+
+@login_required
+def admin_categorias(request):
+    if not request.user.is_staff:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'categorias'))
+        
+    categorias = Categoria.objects.all().order_by('nombre')
+    context = _get_dashboard_context(request, 'categorias')
+    context['categorias_list'] = categorias
+    return render(request, 'core/admin_categorias.html', context)
+
+
+@login_required
+def admin_categoria_crear(request):
+    if not request.user.is_staff:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'categorias'))
+        
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+        icono_css = request.POST.get('icono_css', '').strip() or 'bi-tag'
+        
+        if nombre:
+            if Categoria.objects.filter(nombre=nombre).exists():
+                messages.error(request, 'Ya existe una categoría con ese nombre.')
+            else:
+                Categoria.objects.create(nombre=nombre, descripcion=descripcion, icono_css=icono_css)
+                messages.success(request, 'Categoría creada con éxito.')
+        else:
+            messages.error(request, 'El nombre es obligatorio.')
+            
+    return redirect('core:admin_categorias')
+
+
+@login_required
+def admin_categoria_eliminar(request, pk):
+    if not request.user.is_staff:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'categorias'))
+        
+    categoria = get_object_or_404(Categoria, pk=pk)
+    try:
+        categoria.delete()
+        messages.success(request, 'Categoría eliminada correctamente.')
+    except Exception:
+        messages.error(request, 'No se puede eliminar la categoría porque tiene publicaciones asociadas.')
+        
+    return redirect('core:admin_categorias')
+
+
+@login_required
+def admin_usuarios(request):
+    if not request.user.is_staff:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'usuarios'))
+        
+    usuarios = User.objects.all().order_by('username')
+    context = _get_dashboard_context(request, 'usuarios')
+    context['usuarios_list'] = usuarios
+    return render(request, 'core/admin_usuarios.html', context)
+
+
+@login_required
+def admin_usuario_crear(request):
+    if not request.user.is_staff:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'usuarios'))
+        
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        rol = request.POST.get('rol', 'lector')
+        
+        if username and password and email:
+            if User.objects.filter(username=username).exists():
+                messages.error(request, 'El nombre de usuario ya existe.')
+            else:
+                user = User.objects.create_user(
+                    username=username, 
+                    email=email, 
+                    password=password, 
+                    first_name=first_name, 
+                    last_name=last_name
+                )
+                if rol in ['admin', 'editor', 'redactor']:
+                    user.is_staff = True
+                    user.save()
+                
+                perfil, _ = Perfil.objects.get_or_create(usuario=user)
+                perfil.rol = rol
+                perfil.save()
+                messages.success(request, f'Usuario {username} creado con éxito.')
+        else:
+            messages.error(request, 'Nombre de usuario, email y contraseña son obligatorios.')
+            
+    return redirect('core:admin_usuarios')
+
+
+@login_required
+def admin_usuario_eliminar(request, pk):
+    if not request.user.is_staff:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'usuarios'))
+        
+    usuario = get_object_or_404(User, pk=pk)
+    if usuario == request.user:
+        messages.error(request, 'No puedes eliminarte a ti mismo.')
+    else:
+        usuario.delete()
+        messages.success(request, 'Usuario eliminado correctamente.')
+        
+    return redirect('core:admin_usuarios')
+
+
+@login_required
+def admin_cambiar_contrasena(request):
+    context = _get_dashboard_context(request, 'cambiar_contrasena')
+    
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Contraseña cambiada con éxito.')
+            if context['is_ajax']:
+                form = PasswordChangeForm(request.user)
+            else:
+                return redirect('core:admin_perfil')
+        else:
+            messages.error(request, 'Por favor corrige los errores a continuación.')
+    else:
+        form = PasswordChangeForm(request.user)
+        
+    context['form'] = form
+    return render(request, 'core/admin_cambiar_contrasena.html', context)
+

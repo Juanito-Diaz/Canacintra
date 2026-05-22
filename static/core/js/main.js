@@ -156,4 +156,142 @@
     }, { passive: true });
   }
 
+  // ── AJAX dashboard navigation ─────────────────────────────
+  const sidebar = document.querySelector('.admin-sidebar');
+  const cuerpo = document.getElementById('cuerpo');
+
+  if (sidebar && cuerpo) {
+    // Intercept clicks on links inside the sidebar
+    sidebar.addEventListener('click', function (e) {
+      const link = e.target.closest('a[data-ajax-link]');
+      if (link) {
+        e.preventDefault();
+        const url = link.getAttribute('href');
+        loadSection(url, true);
+      }
+    });
+
+    // Intercept click on action buttons inside #cuerpo (like EDITAR, VER, ELIMINAR, etc.)
+    cuerpo.addEventListener('click', function (e) {
+      const link = e.target.closest('a[data-ajax-action]');
+      if (link) {
+        e.preventDefault();
+        const url = link.getAttribute('href');
+        loadSection(url, true);
+      }
+    });
+
+    // Intercept form submissions inside #cuerpo
+    cuerpo.addEventListener('submit', function (e) {
+      const form = e.target.closest('form');
+      if (form) {
+        if (form.getAttribute('data-no-ajax') === 'true') {
+          return;
+        }
+        e.preventDefault();
+        submitFormAjax(form);
+      }
+    });
+
+    // Handle back/forward navigation
+    window.addEventListener('popstate', function (e) {
+      if (e.state && e.state.url) {
+        loadSection(e.state.url, false);
+      }
+    });
+
+    // Initial state setup
+    window.history.replaceState({ url: window.location.pathname }, '', window.location.pathname);
+  }
+
+  function loadSection(url, pushState = true) {
+    cuerpo.innerHTML = `
+      <div class="d-flex justify-content-center align-items-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    `;
+
+    fetch(url, {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Error al cargar la sección');
+      return res.text();
+    })
+    .then(html => {
+      cuerpo.innerHTML = html;
+      if (pushState) {
+        window.history.pushState({ url: url }, '', url);
+      }
+      updateActiveSidebarLink(url);
+    })
+    .catch(err => {
+      cuerpo.innerHTML = `
+        <div class="alert alert-danger" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          Error al cargar el contenido: ${err.message}
+        </div>
+      `;
+    });
+  }
+
+  function submitFormAjax(form) {
+    const url = form.getAttribute('action') || window.location.pathname;
+    const method = form.getAttribute('method') || 'POST';
+    const formData = new FormData(form);
+
+    cuerpo.innerHTML = `
+      <div class="d-flex justify-content-center align-items-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Procesando...</span>
+        </div>
+      </div>
+    `;
+
+    fetch(url, {
+      method: method,
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(res => {
+      if (res.redirected) {
+        loadSection(res.url, true);
+        return null;
+      }
+      return res.text();
+    })
+    .then(html => {
+      if (html) {
+        cuerpo.innerHTML = html;
+      }
+    })
+    .catch(err => {
+      cuerpo.innerHTML = `
+        <div class="alert alert-danger" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          Error al procesar la solicitud: ${err.message}
+        </div>
+      `;
+    });
+  }
+
+  function updateActiveSidebarLink(url) {
+    if (!sidebar) return;
+    const pathname = new URL(url, window.location.origin).pathname;
+    sidebar.querySelectorAll('a[data-ajax-link]').forEach(link => {
+      const linkPath = new URL(link.getAttribute('href'), window.location.origin).pathname;
+      if (pathname.startsWith(linkPath)) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+  }
+
 })();

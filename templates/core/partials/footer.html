@@ -1,74 +1,70 @@
 {% load static %}
 <!-- ════════════════════════════════════════════
      Footer CANACINTRA — partial: footer.html
-════════════════════════════════════════════ -->
-<footer class="canacintra-footer mt-5">
-  <div class="container py-5">
+     ════════════════════════════════════════════ -->
+<footer class="canacintra-footer mt-5 py-5 bg-dark text-white-50 border-top border-secondary">
+  <div class="container">
     <div class="row g-4">
-      <!-- Columna: Marca -->
-      <div class="col-lg-4">
-        <div class="d-flex align-items-center gap-2 mb-3">
-          <div class="brand-icon">
-            <i class="bi bi-newspaper"></i>
-          </div>
-          <div>
-            <span class="brand-name text-white">CANACINTRA</span>
-            <small class="d-block text-white-50">Portal de Noticias</small>
-          </div>
-        </div>
-        <p class="text-white-50 small">
-          Cámara Nacional de la Industria de Transformación. Información industrial
-          y empresarial al día.
+      <!-- Columna 1: Acerca de -->
+      <div class="col-lg-4 col-md-12">
+        <h5 class="text-white mb-3 fw-bold">Acerca de</h5>
+        <p class="small lh-sm">
+          La Cámara Nacional de la Industria de Transformación (CANACINTRA) es el organismo empresarial líder que representa al sector industrial de México, fomentando la competitividad, la innovación y el desarrollo tecnológico sostenible de las empresas.
         </p>
         <div class="d-flex gap-3 mt-3">
-          <a href="#" class="footer-social" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
-          <a href="#" class="footer-social" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
-          <a href="#" class="footer-social" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
-          <a href="#" class="footer-social" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+          <a href="#" class="text-white-50 hover-text-white" aria-label="Facebook"><i class="bi bi-facebook fs-5"></i></a>
+          <a href="#" class="text-white-50 hover-text-white" aria-label="Twitter"><i class="bi bi-twitter-x fs-5"></i></a>
+          <a href="#" class="text-white-50 hover-text-white" aria-label="LinkedIn"><i class="bi bi-linkedin fs-5"></i></a>
         </div>
       </div>
 
-      <!-- Columna: Categorías -->
+      <!-- Columna 2: Compañía -->
       <div class="col-lg-4 col-md-6">
-        <h6 class="footer-heading">Secciones</h6>
-        <ul class="footer-links list-unstyled">
-          {% for cat in categorias %}
-          <li>
-            <a href="{{ cat.get_absolute_url }}">
-              <i class="bi bi-chevron-right me-1"></i>{{ cat.nombre }}
+        <h5 class="text-white mb-3 fw-bold">Compañía</h5>
+        <ul class="list-unstyled footer-links small">
+          <li class="mb-2">
+            <a href="{% url 'core:index' %}" class="text-white-50 text-decoration-none hover-text-white d-flex align-items-center gap-2">
+              <i class="bi bi-chevron-right" style="font-size: 0.75rem;"></i> Inicio
             </a>
           </li>
+          <li class="mb-2">
+            <a href="{% url 'core:admin_perfil' %}" class="text-white-50 text-decoration-none hover-text-white d-flex align-items-center gap-2">
+              <i class="bi bi-chevron-right" style="font-size: 0.75rem;"></i> Mi Perfil / Panel
+            </a>
+          </li>
+          <li class="mb-2">
+            <a href="{% url 'core:buscar' %}" class="text-white-50 text-decoration-none hover-text-white d-flex align-items-center gap-2">
+              <i class="bi bi-chevron-right" style="font-size: 0.75rem;"></i> Buscar Noticias
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Columna 3: Entradas Recientes -->
+      <div class="col-lg-4 col-md-6">
+        <h5 class="text-white mb-3 fw-bold">Entradas Recientes</h5>
+        <ul class="list-unstyled small">
+          {% for pub in recent_publications %}
+          <li class="mb-3 border-bottom border-secondary pb-2">
+            <a href="{{ pub.get_absolute_url }}" class="text-white text-decoration-none hover-text-white fw-bold d-block text-truncate">
+              {{ pub.titulo }}
+            </a>
+            <small class="text-muted d-block mt-1">
+              <i class="bi bi-calendar3 me-1"></i>{{ pub.fecha_publicacion|date:"d M, Y" }}
+            </small>
+          </li>
           {% empty %}
-          <li><span class="text-white-50">Sin categorías aún.</span></li>
+          <li class="text-muted">No hay publicaciones recientes.</li>
           {% endfor %}
         </ul>
       </div>
-
-      <!-- Columna: Accesos rápidos -->
-      <div class="col-lg-4 col-md-6">
-        <h6 class="footer-heading">Accesos Rápidos</h6>
-        <ul class="footer-links list-unstyled">
-          <li><a href="{% url 'core:index' %}"><i class="bi bi-house me-1"></i>Inicio</a></li>
-          <li><a href="{% url 'core:buscar' %}"><i class="bi bi-search me-1"></i>Buscador</a></li>
-          {% if user.is_staff %}
-          <li><a href="/admin/"><i class="bi bi-shield-lock me-1"></i>Panel Admin</a></li>
-          {% endif %}
-        </ul>
-        <div class="mt-4">
-          <small class="text-white-50">
-            <i class="bi bi-clock me-1"></i>
-            Actualizado constantemente
-          </small>
-        </div>
-      </div>
     </div>
 
-    <hr class="border-secondary mt-4 mb-3" />
+    <hr class="border-secondary my-4" />
 
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-      <small class="text-white-50">
-        &copy; {% now "Y" %} CANACINTRA — Tópicos de desarrollo de aplicaciones
-      </small>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small">
+      <p class="mb-0">&copy; {% now "Y" %} CANACINTRA — Todos los derechos reservados.</p>
+      <p class="mb-0">Portal Institucional Oficial</p>
     </div>
   </div>
 </footer>

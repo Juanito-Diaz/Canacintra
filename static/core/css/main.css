@@ -715,3 +715,95 @@ html { scroll-behavior: smooth; }
   .hero-title { font-size: 1.2rem; }
   .brand-name { font-size: 1.1rem; }
 }
+
+/* ═══════════════════════════════════════
+   ADMIN WORKSPACE & TEXTURED LOGO CUSTOM STYLES
+   ═══════════════════════════════════════ */
+
+/* Logotipo */
+.brand-logo-container {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Sidebar de administración */
+.admin-sidebar {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+.admin-sidebar .nav-link {
+  color: var(--color-primary-light);
+  font-weight: 500;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+.admin-sidebar .nav-link:hover {
+  background-color: rgba(59, 130, 246, 0.08);
+  color: var(--color-accent);
+}
+.admin-sidebar .nav-link.active {
+  background-color: var(--color-accent) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+/* Flat action buttons override */
+.btn-warning {
+  background-color: #f59e0b !important;
+  border-color: #f59e0b !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+.btn-warning:hover {
+  background-color: #d97706 !important;
+  border-color: #d97706 !important;
+}
+.btn-info {
+  background-color: #06b6d4 !important;
+  border-color: #06b6d4 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+.btn-info:hover {
+  background-color: #0891b2 !important;
+  border-color: #0891b2 !important;
+}
+.btn-danger {
+  background-color: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+.btn-danger:hover {
+  background-color: #dc2626 !important;
+  border-color: #dc2626 !important;
+}
+
+/* Forms workspace inputs styling */
+.form-control, .form-select {
+  border-color: var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  transition: var(--transition);
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+/* Custom avatar elements inside panels */
+.author-avatar {
+  background: var(--color-border);
+  color: var(--color-primary-light);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+

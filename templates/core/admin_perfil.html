@@ -1,0 +1,80 @@
+{% extends base_template %}
+
+{% block dashboard_content %}
+<div class="row justify-content-center">
+  <div class="col-md-11">
+    <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+      <h2 class="h4 mb-0 text-primary fw-bold">
+        <i class="bi bi-person-circle me-2 text-secondary"></i>Mi Perfil
+      </h2>
+      <span class="badge bg-primary text-capitalize px-3 py-2 rounded-pill">{{ user.perfil.get_rol_display|default:"Lector" }}</span>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" action="{% url 'core:admin_perfil' %}" enctype="multipart/form-data" class="row g-4">
+      {% csrf_token %}
+      
+      <!-- Avatar Section -->
+      <div class="col-md-4 text-center border-end pe-md-4 d-flex flex-column align-items-center justify-content-center py-3">
+        <div class="position-relative mb-3">
+          {% if perfil.foto_perfil %}
+            <img src="{{ perfil.foto_perfil.url }}" alt="{{ user.username }}" class="img-thumbnail rounded-circle shadow-sm" style="width: 150px; height: 150px; object-fit: cover; border-width: 3px;">
+          {% else %}
+            <div class="bg-light rounded-circle border d-flex align-items-center justify-content-center text-muted shadow-sm" style="width: 150px; height: 150px;">
+              <i class="bi bi-person fs-1 text-secondary"></i>
+            </div>
+          {% endif %}
+        </div>
+        <div class="mb-3 w-100">
+          <label for="foto_perfil" class="form-label small fw-bold text-muted">Cambiar Foto de Perfil</label>
+          <input class="form-control form-control-sm" type="file" id="foto_perfil" name="foto_perfil" accept="image/*">
+        </div>
+      </div>
+      
+      <!-- Fields Section -->
+      <div class="col-md-8">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label for="first_name" class="form-label small fw-bold text-muted">Nombre(s)</label>
+            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}" placeholder="Ingresa tu nombre" required>
+          </div>
+          <div class="col-sm-6">
+            <label for="last_name" class="form-label small fw-bold text-muted">Apellidos</label>
+            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}" placeholder="Ingresa tus apellidos" required>
+          </div>
+          <div class="col-sm-6">
+            <label for="username" class="form-label small fw-bold text-muted">Usuario</label>
+            <input type="text" class="form-control bg-light" id="username" value="{{ user.username }}" readonly placeholder="Nombre de usuario (único)">
+          </div>
+          <div class="col-sm-6">
+            <label for="email" class="form-label small fw-bold text-muted">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" placeholder="ejemplo@correo.com" required>
+          </div>
+          <div class="col-sm-12">
+            <label for="telefono" class="form-label small fw-bold text-muted">Teléfono</label>
+            <input type="text" class="form-control" id="telefono" name="telefono" value="{{ perfil.telefono }}" placeholder="Número telefónico a 10 dígitos">
+          </div>
+          <div class="col-12">
+            <label for="bio" class="form-label small fw-bold text-muted">Biografía</label>
+            <textarea class="form-control" id="bio" name="bio" rows="3" placeholder="Escribe un breve resumen de tu trayectoria...">{{ perfil.bio }}</textarea>
+          </div>
+        </div>
+        
+        <div class="mt-4 text-end">
+          <button type="submit" class="btn btn-primary px-4 rounded-pill">
+            <i class="bi bi-save me-1"></i>Guardar Cambios
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

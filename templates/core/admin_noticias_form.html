@@ -1,0 +1,93 @@
+{% extends base_template %}
+
+{% block dashboard_content %}
+<div>
+  <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+    <h2 class="h4 mb-0 text-primary fw-bold">
+      <i class="bi bi-newspaper me-2 text-secondary"></i>
+      {% if modo == 'crear' %}Nueva Publicación{% else %}Editar Publicación{% endif %}
+    </h2>
+    <a href="{% url 'core:admin_noticias' %}" class="btn btn-outline-secondary rounded-pill px-3" data-ajax-action="true">
+      <i class="bi bi-arrow-left me-1"></i>Regresar
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card border-0 bg-light p-4 rounded-4 shadow-sm">
+    <form method="post" enctype="multipart/form-data" 
+          action="{% if modo == 'crear' %}{% url 'core:admin_noticia_crear' %}{% else %}{% url 'core:admin_noticia_editar' pk=noticia.pk %}{% endif %}">
+      {% csrf_token %}
+      
+      <div class="row g-3">
+        <!-- Title -->
+        <div class="col-md-12">
+          <label for="titulo" class="form-label small fw-bold text-muted">Título de la Publicación *</label>
+          <input type="text" class="form-control bg-white shadow-sm" id="titulo" name="titulo" 
+                 value="{{ noticia.titulo|default:'' }}" placeholder="Ingresa un título llamativo e informativo" required>
+        </div>
+
+        <!-- Category & Status -->
+        <div class="col-md-6">
+          <label for="categoria" class="form-label small fw-bold text-muted">Categoría *</label>
+          <select class="form-select bg-white shadow-sm" id="categoria" name="categoria" required>
+            <option value="" disabled {% if not noticia %}selected{% endif %}>Selecciona una categoría</option>
+            {% for cat in categorias %}
+              <option value="{{ cat.pk }}" {% if noticia.categoria.pk == cat.pk %}selected{% endif %}>{{ cat.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label for="estatus" class="form-label small fw-bold text-muted">Estatus *</label>
+          <select class="form-select bg-white shadow-sm" id="estatus" name="estatus" required>
+            {% for est in estatuses %}
+              <option value="{{ est.pk }}" {% if noticia.estatus.pk == est.pk %}selected{% elif not noticia and est.nombre == 'captura' %}selected{% endif %}>{{ est.get_nombre_display }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Excerpt -->
+        <div class="col-md-12">
+          <label for="resumen" class="form-label small fw-bold text-muted">Resumen / Extracto</label>
+          <input type="text" class="form-control bg-white shadow-sm" id="resumen" name="resumen" 
+                 value="{{ noticia.resumen|default:'' }}" placeholder="Breve descripción que aparecerá en las tarjetas (máx 300 caracteres)">
+        </div>
+
+        <!-- Content -->
+        <div class="col-md-12">
+          <label for="contenido" class="form-label small fw-bold text-muted">Contenido de la Noticia *</label>
+          <textarea class="form-control bg-white shadow-sm" id="contenido" name="contenido" rows="10" 
+                    placeholder="Escribe el cuerpo completo de la noticia aquí..." required>{{ noticia.contenido|default:'' }}</textarea>
+        </div>
+
+        <!-- Featured Image -->
+        <div class="col-md-12">
+          <label for="imagen_destacada" class="form-label small fw-bold text-muted">Imagen Destacada</label>
+          {% if noticia.imagen_destacada %}
+            <div class="mb-2">
+              <img src="{{ noticia.imagen_destacada.url }}" alt="{{ noticia.titulo }}" class="img-thumbnail" style="max-height: 150px;">
+              <small class="text-muted d-block mt-1">Imagen actual: {{ noticia.imagen_destacada.name }}</small>
+            </div>
+          {% endif %}
+          <input class="form-control bg-white shadow-sm" type="file" id="imagen_destacada" name="imagen_destacada" accept="image/*">
+        </div>
+      </div>
+
+      <div class="mt-4 text-end">
+        <button type="submit" class="btn btn-primary px-4 rounded-pill shadow">
+          <i class="bi bi-check-lg me-1"></i>
+          {% if modo == 'crear' %}Crear Publicación{% else %}Guardar Cambios{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

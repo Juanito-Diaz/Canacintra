@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | CANACINTRA{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 min-vh-100">
+  <div class="row">
+    <!-- Sidebar Izquierdo -->
+    <aside class="col-md-3 col-lg-2 mb-4">
+      <div class="card border-0 shadow-sm admin-sidebar p-3">
+        <div class="d-flex align-items-center gap-2 mb-4 px-2">
+          <div class="user-avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; overflow: hidden;">
+            {% if request.user.perfil.foto_perfil %}
+              <img src="{{ request.user.perfil.foto_perfil.url }}" alt="{{ request.user.username }}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+            {% else %}
+              <i class="bi bi-person-circle fs-3 text-white"></i>
+            {% endif %}
+          </div>
+          <div class="overflow-hidden">
+            <h6 class="mb-0 fw-bold text-truncate" style="font-size: 0.9rem;" title="{{ request.user.get_full_name|default:request.user.username }}">{{ request.user.get_full_name|default:request.user.username }}</h6>
+            <small class="text-muted text-capitalize" style="font-size: 0.75rem;">{{ request.user.perfil.get_rol_display|default:"Lector" }}</small>
+          </div>
+        </div>
+        
+        <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+          <a class="nav-link d-flex align-items-center gap-2 mb-2 {% if active_tab == 'perfil' %}active{% endif %}" 
+             href="{% url 'core:admin_perfil' %}" data-ajax-link="perfil">
+            <i class="bi bi-person-circle"></i> Mi Perfil
+          </a>
+          
+          {% if request.user.is_staff %}
+          <a class="nav-link d-flex align-items-center gap-2 mb-2 {% if active_tab == 'noticias' %}active{% endif %}" 
+             href="{% url 'core:admin_noticias' %}" data-ajax-link="noticias">
+            <i class="bi bi-newspaper"></i> Noticias
+          </a>
+          <a class="nav-link d-flex align-items-center gap-2 mb-2 {% if active_tab == 'comentarios' %}active{% endif %}" 
+             href="{% url 'core:admin_comentarios' %}" data-ajax-link="comentarios">
+            <i class="bi bi-chat-left-text"></i> Comentarios
+            {% if conteo_pendientes > 0 %}
+              <span class="badge rounded-pill bg-danger ms-auto">{{ conteo_pendientes }}</span>
+            {% endif %}
+          </a>
+          <a class="nav-link d-flex align-items-center gap-2 mb-2 {% if active_tab == 'categorias' %}active{% endif %}" 
+             href="{% url 'core:admin_categorias' %}" data-ajax-link="categorias">
+            <i class="bi bi-tags"></i> Categorías
+          </a>
+          <a class="nav-link d-flex align-items-center gap-2 mb-2 {% if active_tab == 'usuarios' %}active{% endif %}" 
+             href="{% url 'core:admin_usuarios' %}" data-ajax-link="usuarios">
+            <i class="bi bi-people"></i> Usuarios
+          </a>
+          {% endif %}
+          
+          <a class="nav-link d-flex align-items-center gap-2 mb-3 {% if active_tab == 'cambiar_contrasena' %}active{% endif %}" 
+             href="{% url 'core:admin_cambiar_contrasena' %}" data-ajax-link="cambiar_contrasena">
+            <i class="bi bi-key"></i> Cambiar Contraseña
+          </a>
+          
+          <hr class="my-2 text-muted">
+          
+          <form action="{% url 'core:logout' %}" method="post" class="mt-2 w-100" data-no-ajax="true">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2 rounded-3 py-2 font-weight-bold">
+              <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+            </button>
+          </form>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Contenedor Dinámico #cuerpo -->
+    <main class="col-md-9 col-lg-10">
+      <div id="cuerpo" class="card border-0 shadow-sm p-4 bg-white min-vh-75 position-relative">
+        {% block dashboard_content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

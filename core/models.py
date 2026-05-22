@@ -122,6 +122,10 @@ class Publicacion(models.Model):
         default=timezone.now,
         verbose_name='Fecha de creación',
     )
+    fecha_actualizacion = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Fecha de actualización',
+    )
     fecha_publicacion = models.DateTimeField(
         null=True,
         blank=True,
