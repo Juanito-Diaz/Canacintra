@@ -13,7 +13,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 
-from .models import Publicacion, Categoria, Estatus, Archivo, Comentario, Perfil
+from .models import Publicacion, Categoria, Estatus, Archivo, Comentario, Perfil, GaleriaImagen
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 
@@ -325,14 +325,32 @@ def admin_noticia_crear(request):
                 autor=request.user
             )
             
-            if imagen_modo == 'archivo' and 'imagen_destacada' in request.FILES:
-                noticia.imagen_destacada = request.FILES['imagen_destacada']
+            if imagen_modo == 'archivo':
+                if 'imagen_destacada' in request.FILES:
+                    noticia.imagen_destacada = request.FILES['imagen_destacada']
                 noticia.imagen_url = None
-            elif imagen_modo == 'url' and imagen_url_valor:
+            elif imagen_modo == 'url':
                 noticia.imagen_url = imagen_url_valor
-                noticia.imagen_destacada = None
+                if noticia.imagen_destacada:
+                    noticia.imagen_destacada.delete(save=False)
+                noticia.imagen_destacada = ''
                 
             noticia.save()
+            
+            # Guardar galería de imágenes (Archivos)
+            galeria_archivos = request.FILES.getlist('galeria')
+            for f in galeria_archivos:
+                GaleriaImagen.objects.create(publicacion=noticia, imagen=f)
+
+            # Guardar galería de imágenes (URLs)
+            galeria_urls_texto = request.POST.get('galeria_urls', '')
+            if galeria_urls_texto:
+                lineas = galeria_urls_texto.splitlines()
+                for linea in lineas:
+                    url = linea.strip()
+                    if url:
+                        GaleriaImagen.objects.create(publicacion=noticia, imagen_url=url)
+
             messages.success(request, 'Publicación creada con éxito.')
             return redirect('core:admin_noticias')
             
@@ -373,16 +391,39 @@ def admin_noticia_editar(request, pk):
             noticia.categoria = categoria
             noticia.estatus = estatus
             
-            if imagen_modo == 'archivo' and 'imagen_destacada' in request.FILES:
-                noticia.imagen_destacada = request.FILES['imagen_destacada']
+            if imagen_modo == 'archivo':
+                if 'imagen_destacada' in request.FILES:
+                    noticia.imagen_destacada = request.FILES['imagen_destacada']
                 noticia.imagen_url = None
-            elif imagen_modo == 'url' and imagen_url_valor:
+            elif imagen_modo == 'url':
                 noticia.imagen_url = imagen_url_valor
-                noticia.imagen_destacada = None
+                if noticia.imagen_destacada:
+                    noticia.imagen_destacada.delete(save=False)
+                noticia.imagen_destacada = ''
                 
             noticia.save()
+            
+            # Eliminar imágenes de galería seleccionadas
+            imagenes_a_eliminar = request.POST.getlist('eliminar_galeria')
+            if imagenes_a_eliminar:
+                GaleriaImagen.objects.filter(pk__in=imagenes_a_eliminar).delete()
+            
+            # Guardar nuevas imágenes en la galería (Archivos)
+            galeria_archivos = request.FILES.getlist('galeria')
+            for f in galeria_archivos:
+                GaleriaImagen.objects.create(publicacion=noticia, imagen=f)
+                
+            # Guardar nuevas imágenes en la galería (URLs)
+            galeria_urls_texto = request.POST.get('galeria_urls', '')
+            if galeria_urls_texto:
+                lineas = galeria_urls_texto.splitlines()
+                for linea in lineas:
+                    url = linea.strip()
+                    if url:
+                        GaleriaImagen.objects.create(publicacion=noticia, imagen_url=url)
+
             messages.success(request, 'Publicación actualizada con éxito.')
-            return redirect('core:admin_noticias')
+            return redirect('core:admin_noticia_editar', pk=noticia.pk)
             
     context['noticia'] = noticia
     context['categorias'] = categorias

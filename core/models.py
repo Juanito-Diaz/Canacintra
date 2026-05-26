@@ -190,7 +190,7 @@ class Publicacion(models.Model):
     @property
     def imagen_src(self):
         """Retorna la URL de la imagen: prioriza el archivo subido, luego la URL externa."""
-        if self.imagen_destacada:
+        if self.imagen_destacada and self.imagen_destacada.name:
             return self.imagen_destacada.url
         if self.imagen_url:
             return self.imagen_url
@@ -264,6 +264,55 @@ class Archivo(models.Model):
         elif self.tamanio_bytes < 1024 ** 2:
             return f"{self.tamanio_bytes / 1024:.1f} KB"
         return f"{self.tamanio_bytes / (1024 ** 2):.1f} MB"
+
+
+# ─────────────────────────────────────────────
+#  Galería de Imágenes
+# ─────────────────────────────────────────────
+class GaleriaImagen(models.Model):
+    """Múltiples imágenes asociadas a una publicación (Galería)."""
+    publicacion = models.ForeignKey(
+        Publicacion,
+        on_delete=models.CASCADE,
+        related_name='galeria_imagenes',
+        verbose_name='Publicación',
+    )
+    imagen = models.ImageField(
+        upload_to='publicaciones/galeria/%Y/%m/',
+        null=True,
+        blank=True,
+        verbose_name='Imagen',
+    )
+    imagen_url = models.URLField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name='Imagen (URL)',
+        help_text='URL externa de la imagen para la galería.',
+    )
+    orden = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Orden',
+        help_text='Útil si deseas ordenar las imágenes de la galería.'
+    )
+    subida_en = models.DateTimeField(auto_now_add=True, verbose_name='Subida el')
+
+    class Meta:
+        verbose_name = 'Imagen de Galería'
+        verbose_name_plural = 'Imágenes de Galería'
+        ordering = ['orden', 'subida_en']
+
+    def __str__(self):
+        return f"Imagen galería de {self.publicacion.titulo}"
+
+    @property
+    def imagen_src(self):
+        """Retorna la URL de la imagen: prioriza el archivo subido, luego la URL externa."""
+        if self.imagen and self.imagen.name:
+            return self.imagen.url
+        if self.imagen_url:
+            return self.imagen_url
+        return None
 
 
 # ─────────────────────────────────────────────

@@ -65,7 +65,7 @@
           </td>
           <td class="text-end">
             <div class="d-inline-flex gap-1">
-              <a href="{{ pub.get_absolute_url }}" target="_blank" class="btn btn-sm btn-warning text-dark px-2" title="Ver publicación">
+              <a href="{{ pub.get_absolute_url }}" class="btn btn-sm btn-warning text-dark px-2" title="Ver publicación">
                 <i class="bi bi-eye-fill me-1"></i>VER
               </a>
               <a href="{% url 'core:admin_noticia_editar' pk=pub.pk %}" class="btn btn-sm btn-info text-white px-2" data-ajax-action="true" title="Editar publicación">

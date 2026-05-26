@@ -70,14 +70,69 @@
 
         <!-- Featured Image -->
         <div class="col-md-12">
-          <label for="imagen_destacada" class="form-label small fw-bold text-muted">Imagen Destacada</label>
-          {% if noticia.imagen_destacada %}
-            <div class="mb-2">
-              <img src="{{ noticia.imagen_destacada.url }}" alt="{{ noticia.titulo }}" class="img-thumbnail" style="max-height: 150px;">
-              <small class="text-muted d-block mt-1">Imagen actual: {{ noticia.imagen_destacada.name }}</small>
+          <label class="form-label small fw-bold text-muted">Imagen Destacada</label>
+          
+          {% if noticia.imagen_src %}
+            <div class="mb-3">
+              <img src="{{ noticia.imagen_src }}" alt="{{ noticia.titulo }}" class="img-thumbnail shadow-sm" style="max-width: 100%; height: auto; max-height: 300px; object-fit: contain;">
+              <small class="text-muted d-block mt-1">Imagen actual</small>
             </div>
           {% endif %}
-          <input class="form-control bg-white shadow-sm" type="file" id="imagen_destacada" name="imagen_destacada" accept="image/*">
+          
+          <div class="card p-3 shadow-sm border-0 bg-light">
+            <div class="mb-3">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="imagen_modo" id="modo_archivo" value="archivo" {% if not noticia.imagen_url %}checked{% endif %} onchange="document.getElementById('div_archivo').style.display='block'; document.getElementById('div_url').style.display='none';">
+                <label class="form-check-label" for="modo_archivo">Subir archivo</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="imagen_modo" id="modo_url" value="url" {% if noticia.imagen_url %}checked{% endif %} onchange="document.getElementById('div_archivo').style.display='none'; document.getElementById('div_url').style.display='block';">
+                <label class="form-check-label" for="modo_url">URL de la imagen</label>
+              </div>
+            </div>
+
+            <div id="div_archivo" style="{% if noticia.imagen_url %}display: none;{% else %}display: block;{% endif %}">
+              <label for="imagen_destacada" class="form-label small text-muted">Seleccionar archivo</label>
+              <input class="form-control bg-white shadow-sm" type="file" id="imagen_destacada" name="imagen_destacada" accept="image/*">
+            </div>
+
+            <div id="div_url" style="{% if not noticia.imagen_url %}display: none;{% else %}display: block;{% endif %}">
+              <label for="imagen_url" class="form-label small text-muted">URL de la imagen</label>
+              <input class="form-control bg-white shadow-sm" type="url" id="imagen_url" name="imagen_url" value="{{ noticia.imagen_url|default:'' }}" placeholder="https://ejemplo.com/imagen.jpg">
+            </div>
+          </div>
+        </div>
+
+        <!-- Galería de Imágenes -->
+        <div class="col-md-12 mt-4">
+          <label class="form-label small fw-bold text-muted">Galería de Imágenes</label>
+          <div class="card p-3 shadow-sm border-0 bg-light">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="galeria" class="form-label small text-muted">Subir archivos de imagen (múltiples)</label>
+                <input class="form-control bg-white shadow-sm" type="file" id="galeria" name="galeria" accept="image/*" multiple>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="galeria_urls" class="form-label small text-muted">Agregar por URLs (una por línea)</label>
+                <textarea class="form-control bg-white shadow-sm" id="galeria_urls" name="galeria_urls" rows="2" placeholder="https://ejemplo.com/imagen1.jpg&#10;https://ejemplo.com/imagen2.png"></textarea>
+              </div>
+            </div>
+
+            {% if modo == 'editar' and noticia.galeria_imagenes.all %}
+              <p class="small text-muted mb-2 mt-3">Imágenes actuales (selecciona las que desees eliminar):</p>
+              <div class="d-flex flex-wrap gap-3">
+                {% for img in noticia.galeria_imagenes.all %}
+                  <div class="position-relative d-inline-block border rounded p-1 bg-white">
+                    <img src="{{ img.imagen_src }}" class="img-thumbnail" style="height: 100px; width: 100px; object-fit: contain;" alt="Galería">
+                    <div class="form-check mt-1 text-center">
+                      <input class="form-check-input" type="checkbox" name="eliminar_galeria" value="{{ img.pk }}" id="eliminar_img_{{ img.pk }}">
+                      <label class="form-check-label small text-danger" for="eliminar_img_{{ img.pk }}">Eliminar</label>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
         </div>
       </div>
 

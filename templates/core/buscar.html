@@ -53,8 +53,8 @@
       <article class="resultado-card d-flex gap-4 rounded-4 overflow-hidden shadow-sm bg-white p-0 position-relative">
         <!-- Imagen -->
         <div class="resultado-img-wrapper flex-shrink-0" style="width:200px;">
-          {% if noticia.imagen_destacada %}
-          <img src="{{ noticia.imagen_destacada.url }}"
+          {% if noticia.imagen_src %}
+          <img src="{{ noticia.imagen_src }}"
                alt="{{ noticia.titulo }}"
                class="w-100 h-100 object-fit-cover" />
           {% else %}
