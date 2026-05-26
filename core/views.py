@@ -36,24 +36,25 @@ def _publicaciones_activas():
 # ─────────────────────────────────────────────
 def index(request):
     """
-    Página principal: muestra las últimas noticias publicadas con paginación.
-    Incluye las 5 noticias más actuales para el carrusel superior.
+    Página principal: muestra las noticias agrupadas por categorías,
+    e incluye las 5 noticias más recientes en la sección de 'Noticias Recientes'.
     """
     qs = _publicaciones_activas()
-    recientes = qs[:5]  # Para el carrusel solicitado en hazlo.md
+    recientes = qs[:5]  # Para el carrusel de noticias recientes
     
-    # El listado de abajo puede empezar después de las destacadas o incluir todas
-    paginator = Paginator(qs, 9)
-    pagina = request.GET.get('pagina', 1)
-    noticias_paginadas = paginator.get_page(pagina)
-
     categorias = Categoria.objects.all().order_by('nombre')
+    # Pre-cargar las 3 últimas publicaciones publicadas de cada categoría
+    for cat in categorias:
+        cat.ultimas_publicaciones = (
+            cat.publicaciones.filter(estatus__nombre=Estatus.PUBLICADA)
+            .select_related('autor')
+            .order_by('-fecha_publicacion', '-fecha_creacion')[:3]
+        )
 
     context = {
         'recientes': recientes,
-        'noticias': noticias_paginadas,
         'categorias': categorias,
-        'titulo_pagina': 'Noticias CANACINTRA',
+        'titulo_pagina': 'Blogy | Tu Portal de Noticias',
     }
     return render(request, 'core/index.html', context)
 
@@ -306,6 +307,8 @@ def admin_noticia_crear(request):
         resumen = request.POST.get('resumen', '').strip()
         categoria_id = request.POST.get('categoria', '')
         estatus_id = request.POST.get('estatus', '')
+        imagen_modo = request.POST.get('imagen_modo', 'archivo')  # 'archivo' o 'url'
+        imagen_url_valor = request.POST.get('imagen_url', '').strip()
         
         if not titulo or not contenido or not categoria_id or not estatus_id:
             messages.error(request, 'Por favor completa todos los campos requeridos.')
@@ -322,8 +325,12 @@ def admin_noticia_crear(request):
                 autor=request.user
             )
             
-            if 'imagen_destacada' in request.FILES:
+            if imagen_modo == 'archivo' and 'imagen_destacada' in request.FILES:
                 noticia.imagen_destacada = request.FILES['imagen_destacada']
+                noticia.imagen_url = None
+            elif imagen_modo == 'url' and imagen_url_valor:
+                noticia.imagen_url = imagen_url_valor
+                noticia.imagen_destacada = None
                 
             noticia.save()
             messages.success(request, 'Publicación creada con éxito.')
@@ -351,6 +358,8 @@ def admin_noticia_editar(request, pk):
         resumen = request.POST.get('resumen', '').strip()
         categoria_id = request.POST.get('categoria', '')
         estatus_id = request.POST.get('estatus', '')
+        imagen_modo = request.POST.get('imagen_modo', 'archivo')  # 'archivo' o 'url'
+        imagen_url_valor = request.POST.get('imagen_url', '').strip()
         
         if not titulo or not contenido or not categoria_id or not estatus_id:
             messages.error(request, 'Por favor completa todos los campos requeridos.')
@@ -364,8 +373,12 @@ def admin_noticia_editar(request, pk):
             noticia.categoria = categoria
             noticia.estatus = estatus
             
-            if 'imagen_destacada' in request.FILES:
+            if imagen_modo == 'archivo' and 'imagen_destacada' in request.FILES:
                 noticia.imagen_destacada = request.FILES['imagen_destacada']
+                noticia.imagen_url = None
+            elif imagen_modo == 'url' and imagen_url_valor:
+                noticia.imagen_url = imagen_url_valor
+                noticia.imagen_destacada = None
                 
             noticia.save()
             messages.success(request, 'Publicación actualizada con éxito.')

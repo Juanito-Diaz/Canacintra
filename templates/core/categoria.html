@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ categoria.nombre }} | CANACINTRA{% endblock %}
-{% block meta_description %}Noticias de {{ categoria.nombre }} en CANACINTRA — {{ categoria.descripcion|truncatewords:20 }}{% endblock %}
+{% block title %}{{ categoria.nombre }} | Blogy{% endblock %}
+{% block meta_description %}Noticias de {{ categoria.nombre }} en Blogy — {{ categoria.descripcion|truncatewords:20 }}{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -25,7 +25,7 @@
   <div class="row g-4">
     {% for noticia in noticias %}
     <div class="col-sm-6 col-lg-4">
-      <article class="news-card h-100 rounded-4 overflow-hidden shadow-sm d-flex flex-column">
+      <article class="news-card h-100 rounded-4 overflow-hidden shadow-sm d-flex flex-column position-relative">
         <div class="news-card-img-wrapper">
           {% if noticia.imagen_destacada %}
           <img src="{{ noticia.imagen_destacada.url }}"
@@ -36,23 +36,23 @@
             <i class="bi bi-newspaper fs-1 text-white-50"></i>
           </div>
           {% endif %}
-          <span class="news-cat-badge">
+          <a href="{{ noticia.categoria.get_absolute_url }}" class="news-cat-badge position-relative z-3">
             {% if noticia.categoria.icono_css %}
               <i class="bi {{ noticia.categoria.icono_css }} me-1"></i>
             {% endif %}
             {{ noticia.categoria.nombre }}
-          </span>
+          </a>
         </div>
         <div class="news-card-body flex-grow-1 d-flex flex-column p-4">
           <h2 class="news-card-title" style="font-size:1.05rem;">
-            <a href="{{ noticia.get_absolute_url }}" class="text-decoration-none">
+            <a href="{{ noticia.get_absolute_url }}" class="text-decoration-none stretched-link">
               {{ noticia.titulo|truncatewords:12 }}
             </a>
           </h2>
           <p class="news-card-excerpt flex-grow-1">
-            {{ noticia.resumen|default:noticia.contenido|truncatewords:22 }}
+            {{ noticia.resumen|default:noticia.contenido|striptags|truncatewords:22 }}
           </p>
-          <div class="news-card-meta d-flex align-items-center justify-content-between mt-3">
+          <div class="news-card-meta d-flex align-items-center justify-content-between mt-3 position-relative z-3">
             <small class="text-muted">
               <i class="bi bi-person me-1"></i>
               {{ noticia.autor.get_full_name|default:"Redacción" }}
@@ -61,7 +61,7 @@
               <i class="bi bi-eye me-1"></i>{{ noticia.vistas }}
             </small>
           </div>
-          <div class="mt-1">
+          <div class="mt-1 position-relative z-3">
             <small class="text-muted">
               <i class="bi bi-calendar3 me-1"></i>
               {% if noticia.fecha_publicacion %}

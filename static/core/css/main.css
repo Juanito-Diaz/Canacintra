@@ -449,13 +449,15 @@ img { max-width: 100%; }
 .news-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  transition: transform .4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow .4s ease;
+  transition: transform .4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow .4s ease, border-color 0.3s ease;
   border-radius: var(--radius-lg);
+  position: relative;
+  cursor: pointer;
 }
 .news-card:hover {
   transform: translateY(-8px) scale(1.01);
   box-shadow: var(--shadow-hover) !important;
-  border-color: var(--color-accent);
+  border-color: var(--color-accent) !important;
 }
 
 .news-card-img-wrapper {
@@ -620,10 +622,13 @@ img { max-width: 100%; }
 .resultado-card {
   border: 1px solid var(--color-border);
   transition: var(--transition);
+  position: relative;
+  cursor: pointer;
 }
 .resultado-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-hover) !important;
+  border-color: var(--color-accent) !important;
+  transform: translateY(-2px);
 }
 .resultado-img-wrapper {
   height: 140px;
@@ -807,3 +812,28 @@ html { scroll-behavior: smooth; }
   font-weight: 700;
 }
 
+/* Quill WYSIWYG Editor custom styles */
+.ql-toolbar.ql-snow {
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background-color: var(--color-bg);
+  padding: 8px 12px;
+}
+.ql-container.ql-snow {
+  border: 1px solid var(--color-border) !important;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background-color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+}
+.ql-editor {
+  min-height: 280px;
+  max-height: 500px;
+  overflow-y: auto;
+  line-height: 1.8;
+}
+.ql-editor.ql-blank::before {
+  font-style: normal;
+  color: var(--color-muted);
+  opacity: 0.7;
+}

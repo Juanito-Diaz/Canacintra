@@ -116,7 +116,14 @@ class Publicacion(models.Model):
         upload_to='publicaciones/imagenes/%Y/%m/',
         null=True,
         blank=True,
-        verbose_name='Imagen destacada',
+        verbose_name='Imagen destacada (archivo)',
+    )
+    imagen_url = models.URLField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name='Imagen destacada (URL)',
+        help_text='URL externa de la imagen. Se usa si no se sube un archivo.',
     )
     fecha_creacion = models.DateTimeField(
         default=timezone.now,
@@ -179,6 +186,15 @@ class Publicacion(models.Model):
     @property
     def es_publicada(self):
         return self.estatus and self.estatus.nombre == Estatus.PUBLICADA
+
+    @property
+    def imagen_src(self):
+        """Retorna la URL de la imagen: prioriza el archivo subido, luego la URL externa."""
+        if self.imagen_destacada:
+            return self.imagen_destacada.url
+        if self.imagen_url:
+            return self.imagen_url
+        return None
 
 
 # ─────────────────────────────────────────────

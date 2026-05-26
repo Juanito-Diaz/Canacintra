@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}{{ titulo_pagina }}{% endblock %}
-{% block meta_description %}Resultados de búsqueda para "{{ query }}" en el portal de noticias CANACINTRA.{% endblock %}
+{% block meta_description %}Resultados de búsqueda para "{{ query }}" en el portal de noticias Blogy.{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -50,7 +50,7 @@
   <div class="row g-4">
     {% for noticia in noticias %}
     <div class="col-12">
-      <article class="resultado-card d-flex gap-4 rounded-4 overflow-hidden shadow-sm bg-white p-0">
+      <article class="resultado-card d-flex gap-4 rounded-4 overflow-hidden shadow-sm bg-white p-0 position-relative">
         <!-- Imagen -->
         <div class="resultado-img-wrapper flex-shrink-0" style="width:200px;">
           {% if noticia.imagen_destacada %}
@@ -66,18 +66,18 @@
         <!-- Contenido -->
         <div class="p-4 d-flex flex-column justify-content-center flex-grow-1">
           <a href="{{ noticia.categoria.get_absolute_url }}"
-             class="badge-categoria mb-2 d-inline-block">
+             class="badge-categoria mb-2 d-inline-block position-relative z-3">
             {{ noticia.categoria.nombre }}
           </a>
           <h3 class="h6 fw-bold mb-2">
-            <a href="{{ noticia.get_absolute_url }}" class="text-decoration-none text-dark">
+            <a href="{{ noticia.get_absolute_url }}" class="text-decoration-none text-dark stretched-link">
               {{ noticia.titulo }}
             </a>
           </h3>
           <p class="text-muted small mb-2">
-            {{ noticia.resumen|default:noticia.contenido|truncatewords:30 }}
+            {{ noticia.resumen|default:noticia.contenido|striptags|truncatewords:30 }}
           </p>
-          <div class="d-flex gap-3 text-muted">
+          <div class="d-flex gap-3 text-muted position-relative z-3">
             <small>
               <i class="bi bi-person me-1"></i>
               {{ noticia.autor.get_full_name|default:"Redacción" }}

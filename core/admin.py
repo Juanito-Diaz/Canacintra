@@ -157,6 +157,12 @@ class PublicacionAdmin(admin.ModelAdmin):
             kwargs["queryset"] = User.objects.filter(is_staff=True)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
+    class Media:
+        js = (
+            'https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js',
+            'core/js/admin_quill.js',
+        )
+
 
 # ─────────────────────────────────────────────
 #  Admin: Categoría
@@ -231,6 +237,6 @@ class PerfilAdmin(admin.ModelAdmin):
 # ─────────────────────────────────────────────
 #  Personalización del sitio de administración
 # ─────────────────────────────────────────────
-admin.site.site_header = 'Portal de Noticias CANACINTRA'
-admin.site.site_title = 'CANACINTRA Admin'
+admin.site.site_header = 'Portal de Noticias Blogy'
+admin.site.site_title = 'Blogy Admin'
 admin.site.index_title = 'Panel de Administración'

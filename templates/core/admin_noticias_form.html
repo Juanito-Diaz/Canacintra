@@ -64,8 +64,8 @@
         <!-- Content -->
         <div class="col-md-12">
           <label for="contenido" class="form-label small fw-bold text-muted">Contenido de la Noticia *</label>
-          <textarea class="form-control bg-white shadow-sm" id="contenido" name="contenido" rows="10" 
-                    placeholder="Escribe el cuerpo completo de la noticia aquí..." required>{{ noticia.contenido|default:'' }}</textarea>
+          <div id="contenido-editor"></div>
+          <textarea id="contenido" name="contenido" style="display:none;" required>{{ noticia.contenido|default:'' }}</textarea>
         </div>
 
         <!-- Featured Image -->

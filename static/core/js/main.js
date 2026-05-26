@@ -224,6 +224,7 @@
     })
     .then(html => {
       cuerpo.innerHTML = html;
+      initQuillEditor();
       if (pushState) {
         window.history.pushState({ url: url }, '', url);
       }
@@ -269,6 +270,7 @@
     .then(html => {
       if (html) {
         cuerpo.innerHTML = html;
+        initQuillEditor();
       }
     })
     .catch(err => {
@@ -293,5 +295,69 @@
       }
     });
   }
+
+  // ── Inicializador de Quill.js ─────────────────────────────
+  function initQuillEditor() {
+    const textarea = document.getElementById('contenido');
+    const editorDiv = document.getElementById('contenido-editor');
+    if (!textarea || !editorDiv) return;
+
+    if (editorDiv.classList.contains('quill-initialized')) return;
+    editorDiv.classList.add('quill-initialized');
+
+    // Cargar estilos CSS de Quill
+    if (!document.getElementById('quill-css')) {
+      const link = document.createElement('link');
+      link.id = 'quill-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css';
+      document.head.appendChild(link);
+    }
+
+    // Cargar librería JS de Quill e inicializar
+    if (window.Quill) {
+      createQuillInstance(textarea, editorDiv);
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js';
+      script.onload = () => createQuillInstance(textarea, editorDiv);
+      document.head.appendChild(script);
+    }
+  }
+
+  function createQuillInstance(textarea, editorDiv) {
+    const toolbarOptions = [
+      [{ 'font': [] }],
+      [{ 'size': ['small', false, 'large', 'huge'] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'script': 'sub'}, { 'script': 'super' }],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'indent': '-1'}, { 'indent': '+1' }],
+      [{ 'align': [] }],
+      ['clean']
+    ];
+
+    textarea.style.display = 'none';
+
+    const quill = new Quill(editorDiv, {
+      modules: {
+        toolbar: toolbarOptions
+      },
+      theme: 'snow'
+    });
+
+    if (textarea.value) {
+      quill.root.innerHTML = textarea.value;
+    }
+
+    quill.on('text-change', function() {
+      textarea.value = quill.root.innerHTML === '<p><br></p>' ? '' : quill.root.innerHTML;
+      textarea.dispatchEvent(new Event('change'));
+    });
+  }
+
+  // Inicializar en carga inicial
+  initQuillEditor();
 
 })();
