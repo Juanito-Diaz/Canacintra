@@ -86,9 +86,10 @@ def publicacion_detalle(request, slug):
             messages.success(request, 'Tu comentario aparecerá una vez que sea revisado por un administrador.')
             return redirect('core:publicacion_detalle', slug=slug)
 
-    # Incrementar contador de vistas
-    Publicacion.objects.filter(pk=publicacion.pk).update(vistas=publicacion.vistas + 1)
-    publicacion.vistas += 1
+    # Incrementar contador de vistas solo si no es administrador (staff)
+    if not (request.user.is_authenticated and request.user.is_staff):
+        Publicacion.objects.filter(pk=publicacion.pk).update(vistas=publicacion.vistas + 1)
+        publicacion.vistas += 1
 
     archivos = publicacion.archivos.all()
     comentarios = publicacion.comentarios.filter(estado=Comentario.ESTADO_APROBADO).select_related('usuario')
@@ -242,6 +243,10 @@ def registro(request):
 
 def _get_dashboard_context(request, active_tab):
     """Helper to determine base template and active tab for dashboard views."""
+    if request.user.is_authenticated:
+        from .models import Perfil
+        Perfil.objects.get_or_create(usuario=request.user)
+        
     is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
     base_template = 'core/partials/ajax_base.html' if is_ajax else 'core/dashboard_base.html'
     return {
@@ -249,6 +254,12 @@ def _get_dashboard_context(request, active_tab):
         'active_tab': active_tab,
         'is_ajax': is_ajax,
     }
+
+def _get_user_rol(user):
+    try:
+        return user.perfil.rol
+    except Exception:
+        return 'lector'
 
 
 @login_required
@@ -283,10 +294,15 @@ def admin_perfil(request):
 
 @login_required
 def admin_noticias(request):
-    if not request.user.is_staff:
+    rol = _get_user_rol(request.user)
+    if not request.user.is_superuser and rol not in ['admin', 'editor', 'redactor']:
         return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'noticias'))
         
-    publicaciones = Publicacion.objects.select_related('autor', 'categoria', 'estatus').all().order_by('-fecha_creacion')
+    if not request.user.is_superuser and rol == 'redactor':
+        publicaciones = Publicacion.objects.select_related('autor', 'categoria', 'estatus').filter(autor=request.user).order_by('-fecha_creacion')
+    else:
+        publicaciones = Publicacion.objects.select_related('autor', 'categoria', 'estatus').all().order_by('-fecha_creacion')
+        
     context = _get_dashboard_context(request, 'noticias')
     context['publicaciones'] = publicaciones
     return render(request, 'core/admin_noticias.html', context)
@@ -294,10 +310,12 @@ def admin_noticias(request):
 
 @login_required
 def admin_noticia_crear(request):
-    if not request.user.is_staff:
+    rol = _get_user_rol(request.user)
+    if not request.user.is_superuser and rol not in ['admin', 'editor', 'redactor']:
         return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'noticias'))
         
     context = _get_dashboard_context(request, 'noticias')
+    context['user_rol'] = rol
     categorias = Categoria.objects.all()
     estatuses = Estatus.objects.all()
     
@@ -307,6 +325,11 @@ def admin_noticia_crear(request):
         resumen = request.POST.get('resumen', '').strip()
         categoria_id = request.POST.get('categoria', '')
         estatus_id = request.POST.get('estatus', '')
+        
+        if rol == 'redactor':
+            estatus_obj = Estatus.objects.filter(nombre=Estatus.REVISION).first()
+            if estatus_obj:
+                estatus_id = str(estatus_obj.pk)
         imagen_modo = request.POST.get('imagen_modo', 'archivo')  # 'archivo' o 'url'
         imagen_url_valor = request.POST.get('imagen_url', '').strip()
         
@@ -362,11 +385,16 @@ def admin_noticia_crear(request):
 
 @login_required
 def admin_noticia_editar(request, pk):
-    if not request.user.is_staff:
+    rol = _get_user_rol(request.user)
+    if not request.user.is_superuser and rol not in ['admin', 'editor', 'redactor']:
         return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'noticias'))
         
     noticia = get_object_or_404(Publicacion, pk=pk)
+    
+    if not request.user.is_superuser and rol == 'redactor' and noticia.autor != request.user:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'noticias'))
     context = _get_dashboard_context(request, 'noticias')
+    context['user_rol'] = rol
     categorias = Categoria.objects.all()
     estatuses = Estatus.objects.all()
     
@@ -376,6 +404,11 @@ def admin_noticia_editar(request, pk):
         resumen = request.POST.get('resumen', '').strip()
         categoria_id = request.POST.get('categoria', '')
         estatus_id = request.POST.get('estatus', '')
+        
+        if rol == 'redactor':
+            estatus_obj = Estatus.objects.filter(nombre=Estatus.REVISION).first()
+            if estatus_obj:
+                estatus_id = str(estatus_obj.pk)
         imagen_modo = request.POST.get('imagen_modo', 'archivo')  # 'archivo' o 'url'
         imagen_url_valor = request.POST.get('imagen_url', '').strip()
         
@@ -434,7 +467,12 @@ def admin_noticia_editar(request, pk):
 
 @login_required
 def admin_noticia_eliminar(request, pk):
-    if not request.user.is_staff:
+    rol = _get_user_rol(request.user)
+    if not request.user.is_superuser and rol not in ['admin', 'editor', 'redactor']:
+        return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'noticias'))
+        
+    noticia = get_object_or_404(Publicacion, pk=pk)
+    if not request.user.is_superuser and rol == 'redactor' and noticia.autor != request.user:
         return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'noticias'))
         
     noticia = get_object_or_404(Publicacion, pk=pk)
@@ -445,7 +483,8 @@ def admin_noticia_eliminar(request, pk):
 
 @login_required
 def admin_comentarios(request):
-    if not request.user.is_staff:
+    rol = _get_user_rol(request.user)
+    if not request.user.is_superuser and rol not in ['admin', 'editor']:
         return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'comentarios'))
         
     comentarios = Comentario.objects.select_related('usuario', 'publicacion').all().order_by('-fecha_creacion')
@@ -456,7 +495,8 @@ def admin_comentarios(request):
 
 @login_required
 def admin_comentario_eliminar(request, pk):
-    if not request.user.is_staff:
+    rol = _get_user_rol(request.user)
+    if not request.user.is_superuser and rol not in ['admin', 'editor']:
         return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'comentarios'))
         
     comentario = get_object_or_404(Comentario, pk=pk)
@@ -467,7 +507,8 @@ def admin_comentario_eliminar(request, pk):
 
 @login_required
 def admin_comentario_aprobar(request, pk):
-    if not request.user.is_staff:
+    rol = _get_user_rol(request.user)
+    if not request.user.is_superuser and rol not in ['admin', 'editor']:
         return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'comentarios'))
         
     comentario = get_object_or_404(Comentario, pk=pk)
@@ -479,7 +520,8 @@ def admin_comentario_aprobar(request, pk):
 
 @login_required
 def admin_categorias(request):
-    if not request.user.is_staff:
+    rol = _get_user_rol(request.user)
+    if not request.user.is_superuser and rol not in ['admin', 'editor']:
         return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'categorias'))
         
     categorias = Categoria.objects.all().order_by('nombre')
@@ -490,7 +532,8 @@ def admin_categorias(request):
 
 @login_required
 def admin_categoria_crear(request):
-    if not request.user.is_staff:
+    rol = _get_user_rol(request.user)
+    if not request.user.is_superuser and rol not in ['admin', 'editor']:
         return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'categorias'))
         
     if request.method == 'POST':
@@ -512,7 +555,8 @@ def admin_categoria_crear(request):
 
 @login_required
 def admin_categoria_eliminar(request, pk):
-    if not request.user.is_staff:
+    rol = _get_user_rol(request.user)
+    if not request.user.is_superuser and rol not in ['admin', 'editor']:
         return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'categorias'))
         
     categoria = get_object_or_404(Categoria, pk=pk)
@@ -527,7 +571,8 @@ def admin_categoria_eliminar(request, pk):
 
 @login_required
 def admin_usuarios(request):
-    if not request.user.is_staff:
+    rol = _get_user_rol(request.user)
+    if not request.user.is_superuser and rol != 'admin':
         return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'usuarios'))
         
     usuarios = User.objects.all().order_by('username')
@@ -538,7 +583,8 @@ def admin_usuarios(request):
 
 @login_required
 def admin_usuario_crear(request):
-    if not request.user.is_staff:
+    rol = _get_user_rol(request.user)
+    if not request.user.is_superuser and rol != 'admin':
         return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'usuarios'))
         
     if request.method == 'POST':
@@ -576,7 +622,8 @@ def admin_usuario_crear(request):
 
 @login_required
 def admin_usuario_eliminar(request, pk):
-    if not request.user.is_staff:
+    rol = _get_user_rol(request.user)
+    if not request.user.is_superuser and rol != 'admin':
         return render(request, 'core/partials/access_denied.html', _get_dashboard_context(request, 'usuarios'))
         
     usuario = get_object_or_404(User, pk=pk)

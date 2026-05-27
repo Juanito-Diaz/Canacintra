@@ -4,6 +4,10 @@
 {% block title %}{{ publicacion.titulo }}{% endblock %}
 {% block meta_description %}{{ publicacion.resumen|default:publicacion.contenido|truncatewords:30 }}{% endblock %}
 
+{% block extra_css %}
+<!-- Cargar los estilos del editor Quill para que las listas y el formato se vean igual que en la edición -->
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+{% endblock %}
 {% block content %}
 <div class="container py-5">
   <div class="row g-5">
@@ -73,8 +77,10 @@
         {% endif %}
 
         <!-- Contenido -->
-        <div class="detalle-contenido">
-          {{ publicacion.contenido|safe }}
+        <div class="detalle-contenido ql-snow">
+          <div class="ql-editor" style="padding: 0; font-size: inherit; font-family: inherit;">
+            {{ publicacion.contenido|safe }}
+          </div>
         </div>
 
         <!-- Archivos adjuntos -->

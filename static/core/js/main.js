@@ -347,6 +347,18 @@
       theme: 'snow'
     });
 
+    // Limpiar formatos no deseados al pegar texto (como fondo negro, colores o fuentes raras)
+    quill.clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
+      delta.forEach(op => {
+        if (op.attributes) {
+          delete op.attributes.background;
+          delete op.attributes.color;
+          delete op.attributes.font;
+        }
+      });
+      return delta;
+    });
+
     if (textarea.value) {
       quill.root.innerHTML = textarea.value;
     }

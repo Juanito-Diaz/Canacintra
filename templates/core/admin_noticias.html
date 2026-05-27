@@ -43,7 +43,13 @@
             <small class="text-muted">{{ pub.categoria.nombre }}</small>
           </td>
           <td>
-            <span class="small text-muted">{{ pub.autor.get_full_name|default:pub.autor.username }}</span>
+            <span class="small text-muted">
+              {% if pub.autor %}
+                {{ pub.autor.get_full_name|default:pub.autor.username }}
+              {% else %}
+                Autor Desconocido
+              {% endif %}
+            </span>
           </td>
           <td>
             <span class="small text-muted">{{ pub.fecha_creacion|date:"d/m/Y H:i" }}</span>

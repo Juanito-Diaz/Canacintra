@@ -826,10 +826,12 @@ html { scroll-behavior: smooth; }
   font-family: var(--font-body);
   font-size: 0.95rem;
 }
-.ql-editor {
+.ql-container.ql-snow .ql-editor {
   min-height: 280px;
   max-height: 500px;
   overflow-y: auto;
+}
+.ql-editor {
   line-height: 1.8;
 }
 .ql-editor.ql-blank::before {

@@ -45,6 +45,7 @@
           </select>
         </div>
 
+        {% if user_rol != 'redactor' %}
         <div class="col-md-6">
           <label for="estatus" class="form-label small fw-bold text-muted">Estatus *</label>
           <select class="form-select bg-white shadow-sm" id="estatus" name="estatus" required>
@@ -53,6 +54,16 @@
             {% endfor %}
           </select>
         </div>
+        {% else %}
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Estatus</label>
+          <div class="d-flex align-items-center h-100">
+            <span class="badge bg-warning text-dark p-2 border shadow-sm">
+              <i class="bi bi-clock-history me-1"></i> Se enviará a Revisión
+            </span>
+          </div>
+        </div>
+        {% endif %}
 
         <!-- Excerpt -->
         <div class="col-md-12">

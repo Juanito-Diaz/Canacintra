@@ -28,11 +28,14 @@
             <i class="bi bi-person-circle"></i> Mi Perfil
           </a>
           
-          {% if request.user.is_staff %}
+          {% if request.user.is_superuser or request.user.perfil.rol in 'admin,editor,redactor' %}
           <a class="nav-link d-flex align-items-center gap-2 mb-2 {% if active_tab == 'noticias' %}active{% endif %}" 
              href="{% url 'core:admin_noticias' %}" data-ajax-link="noticias">
             <i class="bi bi-newspaper"></i> Noticias
           </a>
+          {% endif %}
+          
+          {% if request.user.is_superuser or request.user.perfil.rol in 'admin,editor' %}
           <a class="nav-link d-flex align-items-center gap-2 mb-2 {% if active_tab == 'comentarios' %}active{% endif %}" 
              href="{% url 'core:admin_comentarios' %}" data-ajax-link="comentarios">
             <i class="bi bi-chat-left-text"></i> Comentarios
@@ -44,6 +47,9 @@
              href="{% url 'core:admin_categorias' %}" data-ajax-link="categorias">
             <i class="bi bi-tags"></i> Categorías
           </a>
+          {% endif %}
+          
+          {% if request.user.is_superuser or request.user.perfil.rol == 'admin' %}
           <a class="nav-link d-flex align-items-center gap-2 mb-2 {% if active_tab == 'usuarios' %}active{% endif %}" 
              href="{% url 'core:admin_usuarios' %}" data-ajax-link="usuarios">
             <i class="bi bi-people"></i> Usuarios
