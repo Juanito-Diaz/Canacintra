@@ -94,23 +94,118 @@ DB_PORT=3306
 
 # Base de Datos
 
-El sistema emplea una base de datos relacional **MySQL** que gestiona la estructura de usuarios, sus roles editoriales y la moderación del contenido.
+La persistencia de la aplicación se gestiona sobre un motor **MySQL** bajo un diseño relacional normalizado. 
 
-* **User & Perfil:** Gestión de cuentas y su extensión One-to-One para definir biografías, avatares y el rol del flujo editorial (admin, editor, redactor, lector).
-* **Categoria & Estatus:** Clasificaciones de noticias y definición del estado actual de publicación (captura, revisión, publicada).
-* **Publicacion:** Entidad principal que almacena noticias, relacionando el autor original, la categoría, el estatus y el número de visualizaciones.
-* **Comentario & Archivo:** Aportaciones moderadas de los lectores e información complementaria descargable adjunta a cada artículo.
+### Diagrama Entidad-Relación (MER)
+
+A continuación se detalla la estructura lógica completa de las tablas de la aplicación y sus asociaciones:
 
 ```mermaid
 erDiagram
-    User ||--|| Perfil : "tiene (1:1)"
-    User ||--o{ Publicacion : "escribe (1:N)"
-    User ||--o{ Comentario : "realiza (1:N)"
+    django_contrib_User ||--|| Perfil : "tiene (1:1)"
+    django_contrib_User ||--o{ Publicacion : "escribe (1:N)"
+    django_contrib_User ||--o{ Archivo : "sube (1:N)"
+    django_contrib_User ||--o{ Comentario : "realiza (1:N)"
+    
     Categoria ||--o{ Publicacion : "agrupa (1:N)"
     Estatus ||--o{ Publicacion : "clasifica (1:N)"
+    
     Publicacion ||--o{ Archivo : "contiene (1:N)"
+    Publicacion ||--o{ GaleriaImagen : "muestra (1:N)"
     Publicacion ||--o{ Comentario : "recibe (1:N)"
+
+    django_contrib_User {
+        int id PK
+        string username "Único"
+        string email
+        string first_name
+        string last_name
+        boolean is_staff
+        boolean is_superuser
+    }
+
+    Perfil {
+        int id PK
+        int usuario_id FK "Relación One-to-One con User"
+        string foto_perfil "Ruta del archivo físico"
+        string rol "admin | editor | redactor | lector"
+        text bio "Biografía del usuario"
+        string telefono
+        datetime creado_en
+    }
+
+    Categoria {
+        int id PK
+        string nombre "Único"
+        text descripcion
+        string slug "Único - Indexado"
+        string icono_css "Clase de Bootstrap Icons"
+        datetime creada_en
+    }
+
+    Estatus {
+        int id PK
+        string nombre "captura | revision | publicada"
+    }
+
+    Publicacion {
+        int id PK
+        string titulo
+        string slug "Único - Indexado"
+        text contenido "LongText"
+        string resumen "Extracto corto"
+        string imagen_destacada "Archivo físico"
+        string imagen_url "URL externa opcional"
+        datetime fecha_creacion
+        datetime fecha_actualizacion
+        datetime fecha_publicacion
+        int categoria_id FK "Relación con Categoria (PROTECT)"
+        int estatus_id FK "Relación con Estatus (PROTECT)"
+        int autor_id FK "Relación con User (SET_NULL)"
+        int vistas "Contador incremental"
+    }
+
+    Archivo {
+        int id PK
+        int publicacion_id FK "Relación con Publicacion (CASCADE)"
+        string nombre
+        string tipo "pdf | word | excel | imagen | otro"
+        string archivo "Ruta del archivo físico"
+        datetime subido_en
+        int subido_por_id FK "Relación con User (SET_NULL)"
+        int tamanio_bytes "Tamaño en disco"
+    }
+
+    GaleriaImagen {
+        int id PK
+        int publicacion_id FK "Relación con Publicacion (CASCADE)"
+        string imagen "Archivo físico"
+        string imagen_url "URL externa"
+        int orden "Secuencia de visualización"
+        datetime subida_en
+    }
+
+    Comentario {
+        int id PK
+        int publicacion_id FK "Relación con Publicacion (CASCADE)"
+        int usuario_id FK "Relación con User (CASCADE)"
+        string usuario_nombre "Denormalización para vistas rápidas"
+        text texto
+        string estado "pendiente | aprobado"
+        datetime fecha_creacion
+    }
 ```
+
+### Descripción de Entidades Clave
+
+*   **`django_contrib_User` (django_user):** Tabla nativa de Django para la autenticación básica del sistema.
+*   **`Perfil` (`core_perfil`):** Extensión 1:1 de los usuarios para gestionar sus fotos de avatar, biografías y su nivel de permisos en el flujo de noticias (`rol`).
+*   **`Categoria` (`core_categoria`):** Tabla de clasificación para las noticias. Cuenta con slugs autogenerados para optimizar URLs amigables (SEO).
+*   **`Estatus` (`core_estatus`):** Define el estado de las noticias en el flujo de publicación (`captura` para borradores, `revision` para moderación por redactores, y `publicada` para público en general).
+*   **`Publicacion` (`core_publicacion`):** Contenedor principal de los artículos. Relaciona la noticia con su categoría, su estado actual y su autor original. Registra estadísticas básicas de lectura mediante el campo `vistas`.
+*   **`Archivo` (`core_archivo`):** Documentos complementarios enlazados a la noticia. Permite a los usuarios descargar normativas, PDFs informativos o plantillas relacionadas.
+*   **`GaleriaImagen` (`core_galeriaimagen`):** Colección de imágenes secundarias asociadas a una publicación específica.
+*   **`Comentario` (`core_comentario`):** Retroalimentación de los usuarios lectores. Almacena de forma denormalizada el nombre completo del usuario para agilizar consultas directas de base de datos sin necesidad de realizar `JOINs` complejos.
 
 # API
 
